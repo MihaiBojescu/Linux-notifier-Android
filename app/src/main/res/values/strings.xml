@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Linux notifier</string>
+    <string name="service_name">NotificationReceiver</string>
+    <string name="refresh">Refresh</string>
+</resources>
