@@ -1,9 +1,11 @@
 package dev.mihaibojescu.linuxnotifier;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -11,6 +13,7 @@ import android.widget.TextView;
  * Created by michael on 05.05.2017.
  */
 
+@RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class NotificationReceiver extends NotificationListenerService{
     private MainActivity main;
     public NotificationReceiver(MainActivity main)
@@ -25,7 +28,6 @@ public class NotificationReceiver extends NotificationListenerService{
 
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn){
-        // Implement what you want here
     }
 
 
@@ -34,8 +36,8 @@ public class NotificationReceiver extends NotificationListenerService{
         Log.d("Notification from", sbn.getPackageName().toString());
         Log.d("Notification text", sbn.getNotification().toString());
 
-        ((TextView)main.findViewById(R.id.textView)).setText(sbn.getPackageName() + "\n" + sbn.getNotification().toString());
-        Intent intent = new Intent("dev.mihaibojescu.linuxnotifier.NotificationListener");
+        ((TextView)main.findViewById(R.id.responsetime)).setText(sbn.getPackageName() + "\n" + sbn.getNotification().toString());
+        Intent intent = new Intent("dev.mihaibojescu.linuxnotifier.NotificationReceiver");
         intent.putExtra("notification_event", "onNotificationPosted :" + sbn.getPackageName() + "\n");
         sendBroadcast(intent);
     }

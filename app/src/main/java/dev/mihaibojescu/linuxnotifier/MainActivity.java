@@ -9,12 +9,14 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -22,8 +24,6 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
-
-import org.w3c.dom.Text;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
         this.myIpAddress = getLocalIpAddress();
         this.notifications = new LinkedList<String>();
-        this.pingService = new PingDevices(myIpAddress, this);
+        this.pingService = new PingDevices(myIpAddress, this, getApplicationContext());
         this.pingService.execute();
         this.communicatorThread = new NetworkCommunicator();
         this.communicatorThread.start();
@@ -70,6 +70,26 @@ public class MainActivity extends AppCompatActivity {
         for(int i = 0; i < 255; i++)
             this.pingService.addHost(myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i));
 
+
+        ((SeekBar)findViewById(R.id.seekBar)).setProgress(100);
+        pingService.updateInterval(((SeekBar)findViewById(R.id.seekBar)).getProgress());
+        ((SeekBar)findViewById(R.id.seekBar)).setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                pingService.updateInterval(progress);
+                communicatorThread.setInterval(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
     }
 
@@ -131,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
     public void sendpacket(View V) {
         try {
             String spinnerText = ((Spinner) findViewById(R.id.spinner)).getSelectedItem().toString();
@@ -139,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (Exception e)
         {
-            ((TextView)findViewById(R.id.textView)).setText("Error: address can't be null. Refresh the list." + e.toString());
+            ((TextView)findViewById(R.id.responsetime)).setText("Error: address can't be null. Refresh the list." + e.toString());
         }
         ((TextView)findViewById(R.id.response)).setText(this.communicatorThread.getMessage());
     }

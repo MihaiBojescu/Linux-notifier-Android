@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
@@ -26,6 +27,7 @@ public class NetworkCommunicator extends Thread {
     private Socket socket;
     private BufferedReader streamIn;
     private BufferedWriter streamOut;
+    private Integer interval;
 
     public NetworkCommunicator()
     {
@@ -33,6 +35,7 @@ public class NetworkCommunicator extends Thread {
         this.ports = new LinkedBlockingQueue<Integer>();
         this.messages = new LinkedBlockingQueue<String>();
         this.receivedMessages = new LinkedBlockingQueue<String>();
+        this.interval = 50;
     }
 
     @Override
@@ -50,8 +53,15 @@ public class NetworkCommunicator extends Thread {
                     this.connect(host, port);
 
                 this.sendMessage(currentMessage);
-                if((receivedMessage = this.receiveMessage()) != null)
-                    this.receivedMessages.add(receivedMessage);
+                try
+                {
+                    if ((receivedMessage = this.receiveMessage()) != null)
+                        this.receivedMessages.add(receivedMessage);
+                }
+                catch (Exception e)
+                {
+                    Log.e("Error", "No message received from host");
+                }
 
                 this.disconnect();
             } catch (Exception e) {
@@ -67,8 +77,9 @@ public class NetworkCommunicator extends Thread {
             if(this.socket == null || this.socket.isClosed() || !this.socket.isConnected())
             {
                 this.socket = new Socket(host, port);
-                streamOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                streamIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                this.socket.setSoTimeout(this.interval);
+                this.streamOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                this.streamIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             }
         }
         catch (IOException e)
@@ -115,8 +126,8 @@ public class NetworkCommunicator extends Thread {
         }
         catch (IOException e)
         {
+            return null;
         }
-        return null;
     }
 
     public void pushMessageToIP(String IP, Integer port, String message)
@@ -134,5 +145,16 @@ public class NetworkCommunicator extends Thread {
         catch (Exception e) {
             return null;
         }
+    }
+
+    public void setInterval(Integer value) {
+        this.interval = value;
+        if(this.socket != null)
+            try {
+                this.socket.setSoTimeout(this.interval);
+            }
+            catch(SocketException e)
+            {
+            }
     }
 }
