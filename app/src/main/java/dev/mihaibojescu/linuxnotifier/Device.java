@@ -6,6 +6,7 @@ package dev.mihaibojescu.linuxnotifier;
 
 public class Device {
     private String name;
+    private String address;
     private String mac;
 
     public Device()
@@ -13,15 +14,21 @@ public class Device {
 
     }
 
-    public Device(String name, String mac)
+    public Device(String name, String address, String mac)
     {
         this.name = name;
+        this.address = address;
         this.mac = mac;
     }
 
     public String getName()
     {
         return name;
+    }
+
+    public String getAddress()
+    {
+        return address;
     }
 
     public String getMac()
@@ -32,6 +39,11 @@ public class Device {
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public void setAddress(String address)
+    {
+        this.address = address;
     }
 
     public void setMac(String mac)

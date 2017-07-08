@@ -9,6 +9,8 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
@@ -17,7 +19,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.appindexing.Action;
@@ -59,12 +60,28 @@ public class MainActivity extends AppCompatActivity {
 
         this.myIpAddress = getLocalIpAddress();
         this.notifications = new LinkedList<String>();
-        this.pingService = new PingDevices(myIpAddress, this, getApplicationContext());
+        this.pingService = new PingDevices(myIpAddress, this);
         this.pingService.execute();
         this.communicatorThread = new NetworkCommunicator();
         this.communicatorThread.start();
 
         this.notificationReceiver = new NotificationReceiver(this);
+
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.addOnItemTouchListener(new RecyclerViewTouchHandler(getApplicationContext(), recyclerView, new ClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                communicatorThread.pushMessageToIP(pingService.getHostByIndex(position).getAddress(), 5005, ((EditText)findViewById(R.id.editText)).getText().toString());
+            }
+
+            @Override
+            public void onLongClick(View view, int position) {
+
+            }
+        }));
 
         this.pingService.clearPingList();
         for(int i = 0; i < 255; i++)
@@ -90,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
 
     }
 
@@ -131,21 +149,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.mainmenu, menu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
-        switch (item.getItemId()) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
             case R.id.refreshdevices:
                 this.pingService.clearPingList();
                 for(int i = 0; i < 255; i++)
                     this.pingService.addHost(myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i));
                 return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -155,9 +176,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void sendpacket(View V) {
         try {
-            String spinnerText = ((Spinner) findViewById(R.id.spinner)).getSelectedItem().toString();
+            String text = ((TextView)findViewById(R.id.devicemac)).getText().toString();
+            Log.d("IP", text);
             String message = ((EditText) findViewById(R.id.editText)).getText().toString();
-            this.communicatorThread.pushMessageToIP(spinnerText, 5005, message);
+            this.communicatorThread.pushMessageToIP(text, 5005, message);
         }
         catch (Exception e)
         {

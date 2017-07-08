@@ -1,6 +1,7 @@
 package dev.mihaibojescu.linuxnotifier;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,20 +19,20 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     private List<Device> dataset;
 
-    public static class ViewHolder extends RecyclerView.ViewHolder
-    {
-        public TextView devicename;
-        public TextView devicemac;
+    public static class ViewHolder extends RecyclerView.ViewHolder{
+        public TextView deviceName;
+        public TextView deviceMac;
         public ViewHolder(View view) {
             super(view);
-            devicename = (TextView) view.findViewById(R.id.devicename);
-            devicemac = (TextView) view.findViewById(R.id.devicemac);
+            deviceName = (TextView) view.findViewById(R.id.devicename);
+            deviceMac = (TextView) view.findViewById(R.id.devicemac);
         }
     }
 
     public RecyclerViewAdapter(List<Device> deviceList)
     {
         dataset = deviceList;
+
     }
 
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
@@ -44,8 +45,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(ViewHolder holder, int position)
     {
         Device device = dataset.get(position);
-        holder.devicename.setText(device.getName());
-        holder.devicemac.setText(device.getMac());
+        holder.deviceName.setText(device.getName());
+        holder.deviceMac.setText(device.getMac());
     }
 
     @Override

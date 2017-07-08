@@ -1,23 +1,16 @@
 package dev.mihaibojescu.linuxnotifier;
 
-import android.content.Context;
 import android.os.AsyncTask;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 
 import java.io.IOException;
 import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -29,45 +22,42 @@ public class PingDevices extends AsyncTask<Void, String, Void> {
     private static int port = 5005;
     private Integer interval;
     private BlockingQueue<String> pingQueue;
-    private ArrayAdapter<String> upDevices;
     private List<Device> devices;
     private String myIp;
     private MainActivity main;
     private RecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
-    public PingDevices(String myIP, MainActivity main, Context context)
+    public PingDevices(String myIP, MainActivity main)
     {
         this.interval = 50;
         this.pingQueue = new LinkedBlockingQueue<>();
         this.main = main;
         this.myIp = myIP;
-        this.devices = new ArrayList<Device>();
-        this.upDevices = new ArrayAdapter<String>(main, android.R.layout.simple_spinner_item);
+        this.devices = new ArrayList<>();
         this.recyclerView = (RecyclerView) main.findViewById(R.id.recycler_view);
         recyclerViewAdapter = new RecyclerViewAdapter(devices);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(recyclerViewAdapter);
     }
 
     @Override
     protected Void doInBackground(Void... params) {
         while(true) {
-            InetAddress host = null;
+            String devicename;
             String address = null;
+
             try {
                 address = pingQueue.take();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             try {
-                host = Inet4Address.getByName(address);
+                devicename = Inet4Address.getByName(address).toString();
                 Log.d("Current ip", address);
                 if (address != myIp &&
                         isPortUp(address) &&
                         !contains(address))
-                    publishProgress(address);
+                    publishProgress(devicename, address);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -79,13 +69,9 @@ public class PingDevices extends AsyncTask<Void, String, Void> {
     protected void onProgressUpdate(String... address)
     {
         Log.d("New host", address[0]);
-        upDevices.add(address[0]);
-        upDevices.notifyDataSetChanged();
-        ((Spinner)main.findViewById(R.id.spinner)).setAdapter(upDevices);
-        Device newDev = new Device("New device!", address[0]);
+        Device newDev = new Device(address[0], address[1], address[1]);
         devices.add(newDev);
         recyclerViewAdapter.notifyDataSetChanged();
-        recyclerView.setAdapter(recyclerViewAdapter);
     }
 
     private boolean isPortUp(String address)
@@ -102,10 +88,10 @@ public class PingDevices extends AsyncTask<Void, String, Void> {
 
     }
 
-    private boolean contains(String x)
+    private boolean contains(String address)
     {
-        for(int i = 0; i < upDevices.getCount(); i++)
-            if (upDevices.getItem(i).equals(x)) return true;
+        for(int i = 0; i < devices.size(); i++)
+            if (devices.get(i).getAddress().equals(address)) return true;
         return false;
     }
 
@@ -117,6 +103,11 @@ public class PingDevices extends AsyncTask<Void, String, Void> {
     public void clearPingList()
     {
         pingQueue.clear();
+    }
+
+    public Device getHostByIndex(int index)
+    {
+        return devices.get(index);
     }
 
     public void updateInterval(Integer interval)
