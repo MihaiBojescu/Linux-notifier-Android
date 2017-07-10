@@ -33,9 +33,6 @@ public class NotificationReceiver extends NotificationListenerService{
 
     public void onNotificationPosted (StatusBarNotification sbn, NotificationListenerService.RankingMap rankingMap)
     {
-        Log.d("Notification from", sbn.getPackageName().toString());
-        Log.d("Notification text", sbn.getNotification().toString());
-
         ((TextView)main.findViewById(R.id.responsetime)).setText(sbn.getPackageName() + "\n" + sbn.getNotification().toString());
         Intent intent = new Intent("dev.mihaibojescu.linuxnotifier.NotificationReceiver");
         intent.putExtra("notification_event", "onNotificationPosted :" + sbn.getPackageName() + "\n");

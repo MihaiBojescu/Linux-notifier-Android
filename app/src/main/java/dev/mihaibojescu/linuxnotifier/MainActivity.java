@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -71,17 +72,7 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.addOnItemTouchListener(new RecyclerViewTouchHandler(getApplicationContext(), recyclerView, new ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                communicatorThread.pushMessageToIP(pingService.getHostByIndex(position).getAddress(), 5005, ((EditText)findViewById(R.id.editText)).getText().toString());
-            }
-
-            @Override
-            public void onLongClick(View view, int position) {
-
-            }
-        }));
+        recyclerView.addOnItemTouchListener(new RecyclerViewTouchHandler(getApplicationContext(), recyclerView, new ClickListenerExample()));
 
         this.pingService.clearPingList();
         for(int i = 0; i < 255; i++)
@@ -90,25 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
         ((SeekBar)findViewById(R.id.seekBar)).setProgress(100);
         pingService.updateInterval(((SeekBar)findViewById(R.id.seekBar)).getProgress());
-        ((SeekBar)findViewById(R.id.seekBar)).setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                pingService.updateInterval(progress);
-                communicatorThread.setInterval(progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-
+        ((SeekBar)findViewById(R.id.seekBar)).setOnSeekBarChangeListener(new SeekBarHandler());
     }
 
 
@@ -167,25 +140,13 @@ public class MainActivity extends AppCompatActivity {
                     this.pingService.addHost(myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i));
                 return true;
 
+            case R.id.renewkeys:
+                Toast.makeText(this, "Not implemented yet", Toast.LENGTH_SHORT).show();
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-
-
-    public void sendpacket(View V) {
-        try {
-            String text = ((TextView)findViewById(R.id.devicemac)).getText().toString();
-            Log.d("IP", text);
-            String message = ((EditText) findViewById(R.id.editText)).getText().toString();
-            this.communicatorThread.pushMessageToIP(text, 5005, message);
-        }
-        catch (Exception e)
-        {
-            ((TextView)findViewById(R.id.responsetime)).setText("Error: address can't be null. Refresh the list." + e.toString());
-        }
-        ((TextView)findViewById(R.id.response)).setText(this.communicatorThread.getMessage());
     }
 
     //Network stuff
@@ -233,4 +194,34 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    public class ClickListenerExample implements ClickListener
+    {
+        @Override
+        public void onClick(View view, int position) {
+            communicatorThread.pushMessageToIP(pingService.getHostByIndex(position).getAddress(), 5005, ((EditText)findViewById(R.id.editText)).getText().toString());
+        }
+
+        @Override
+        public void onLongClick(View view, int position) {
+
+        }
+    }
+
+    public class SeekBarHandler implements SeekBar.OnSeekBarChangeListener {
+        @Override
+        public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+            pingService.updateInterval(progress);
+            communicatorThread.setInterval(progress);
+        }
+
+        @Override
+        public void onStartTrackingTouch(android.widget.SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(android.widget.SeekBar seekBar) {
+
+        }
+    }
 }

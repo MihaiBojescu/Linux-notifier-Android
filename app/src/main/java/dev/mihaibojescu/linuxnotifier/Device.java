@@ -8,6 +8,14 @@ public class Device {
     private String name;
     private String address;
     private String mac;
+    private byte[] pin;
+    private int status;
+
+    public enum statuses
+    {
+        NEW,
+        CONNECTED
+    };
 
     public Device()
     {
@@ -36,6 +44,11 @@ public class Device {
         return mac;
     }
 
+    public int getStatus()
+    {
+        return status;
+    }
+
     public void setName(String name)
     {
         this.name = name;
@@ -49,5 +62,10 @@ public class Device {
     public void setMac(String mac)
     {
         this.mac = mac;
+    }
+
+    public void setStatus(int status)
+    {
+        this.status = status;
     }
 }
