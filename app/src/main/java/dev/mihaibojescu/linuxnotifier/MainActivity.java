@@ -127,9 +127,10 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId())
         {
             case R.id.refreshdevices:
-                this.pingService.clearPingList();
+                String address = myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.';
+
                 for(int i = 0; i < 255; i++)
-                    this.deviceHandler.addDeviceToCheckList(new Device("", myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i), "", ""));
+                    this.deviceHandler.addDeviceToCheckList(new Device("", address + String.valueOf(i), "", ""));
                 return true;
 
             case R.id.renewkeys:

@@ -63,8 +63,7 @@ public class PingService extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            //devicename = Inet4Address.getByName(address).toString();
-            Log.d("Current ip", address);
+
             if (address != myIp &&
                 isPortUp(address))
                 responses.add(true);
@@ -73,36 +72,6 @@ public class PingService extends Thread {
             }
         }
     }
-    /*@Override
-    protected Void doInBackground(Void... params) {
-        while(true) {
-            String address = null;
-
-            try {
-                address = pingQueue.take();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            //devicename = Inet4Address.getByName(address).toString();
-            Log.d("Current ip", address);
-            if (address != myIp &&
-                    isPortUp(address))
-                //publishProgress(devicename, address);
-                responses.add(true);
-            else
-            {
-                responses.add(false);
-            }
-        }
-
-    }
-
-    @Override
-    protected void onProgressUpdate(String... address)
-    {
-        Log.d("New host", address[0]);
-        responses.add(true);
-    }*/
 
     private boolean isPortUp(String address)
     {
