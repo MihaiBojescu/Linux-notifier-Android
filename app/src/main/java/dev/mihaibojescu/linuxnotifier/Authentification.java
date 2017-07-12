@@ -5,6 +5,7 @@ import android.util.Log;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 
 /**
@@ -52,12 +53,12 @@ public class Authentification {
         keys = kpg.genKeyPair();
     }
 
-    public byte[] getPublicKey() throws Exception
+    public PublicKey getPublicKey() throws Exception
     {
         if(keys == null)
             throw new Exception("Keys not available, need to be created first.");
 
-        return keys.getPublic().getEncoded().toString().getBytes();
+        return keys.getPublic();
     }
 
     public byte[] getPrivateKey() throws Exception

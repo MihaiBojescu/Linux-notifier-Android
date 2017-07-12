@@ -9,7 +9,7 @@ public class Device {
     private String address;
     private String mac;
     private byte[] pin;
-    private int status;
+    private statuses status;
 
     public enum statuses
     {
@@ -22,11 +22,22 @@ public class Device {
 
     }
 
-    public Device(String name, String address, String mac)
+    public Device(String name, String address, String mac, byte[] pin)
     {
         this.name = name;
         this.address = address;
         this.mac = mac;
+        this.pin = pin;
+        this.status = statuses.NEW;
+    }
+
+    public Device(String name, String address, String mac, String pin)
+    {
+        this.name = name;
+        this.address = address;
+        this.mac = mac;
+        this.pin = pin.getBytes();
+        this.status = statuses.NEW;
     }
 
     public String getName()
@@ -44,7 +55,12 @@ public class Device {
         return mac;
     }
 
-    public int getStatus()
+    public byte[] getPin()
+    {
+        return pin;
+    }
+
+    public statuses getStatus()
     {
         return status;
     }
@@ -64,7 +80,12 @@ public class Device {
         this.mac = mac;
     }
 
-    public void setStatus(int status)
+    public void setPin(byte[] pin)
+    {
+        this.pin = pin;
+    }
+
+    public void setStatus(statuses status)
     {
         this.status = status;
     }
