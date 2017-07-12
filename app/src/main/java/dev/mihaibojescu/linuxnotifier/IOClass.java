@@ -102,13 +102,16 @@ public class IOClass {
         }
         catch(IOException io)
         {
+            io.printStackTrace();
             return null;
         }
         catch(JSONException json)
         {
+            json.printStackTrace();
             return null;
         }
 
+        Log.d("json obj", reader.toString());
         return result;
     }
 }

@@ -31,16 +31,40 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
     @Override
     protected Void doInBackground(Void... params) {
         while(true) {
-            Log.d("exec", "");
             Device device = null;
             try {
                 device = this.checkList.take();
-                Log.d("", device.getAddress());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             if (isDeviceValid(device) && device != null)
+            {
+                NetworkCommunicator communicator = NetworkCommunicator.getInstance();
+                JSONObject request = new JSONObject();
+                try
+                {
+                    request.put("reason", "request info");
+                }
+                catch (JSONException e)
+                {
+                    e.printStackTrace();
+                }
+                communicator.pushMessageToIP(device.getAddress(), 5005, request);
+                JSONObject response = communicator.getResponse();
+
+                try
+                {
+                    device.setName(response.getString("name"));
+                    device.setMac(response.getString("mac"));
+                    device.setStatus(Device.statuses.CONNECTED);
+                }
+                catch (JSONException e)
+                {
+                    e.printStackTrace();
+                }
+
                 publishProgress(device);
+            }
         }
     }
 
@@ -48,6 +72,13 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
     protected void onProgressUpdate(Device... device)
     {
         this.addDevice(device[0]);
+    }
+
+    private void addDevice(Device device)
+    {
+        device.setPin(Authentification.getInstance().createPin(4));
+        this.devices.add(device);
+        main.getAdapter().notifyDataSetChanged();
     }
 
     public static DeviceHandler getInstance()
@@ -82,6 +113,9 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
         IOClass ioClass = IOClass.getInstance();
         ioClass.openFile("devices.json");
         JSONObject result = ioClass.readFile();
+
+        if(result == null) return;
+
         JSONArray names = null;
         JSONArray addresses = null;
         JSONArray macs = null;
@@ -91,25 +125,25 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
         {
             names = result.getJSONArray("name");
             addresses = result.getJSONArray("address");
-            macs = result.getJSONArray("macs");
-            pins = result.getJSONArray("pins");
+            macs = result.getJSONArray("mac");
+            pins = result.getJSONArray("pin");
         }
         catch (JSONException e)
         {
             e.printStackTrace();
         }
+        Log.d("hello, imma json object", names.toString());
 
-        this.devices.clear();
         for(int i = 0; i < names.length(); i++)
         {
             try {
-                JSONObject currentName = names.getJSONObject(i);
-                JSONObject currentAddress = addresses.getJSONObject(i);
-                JSONObject currentMac = macs.getJSONObject(i);
-                JSONObject currentPin = pins.getJSONObject(i);
+                String currentName = names.getString(i);
+                String currentAddress = addresses.getString(i);
+                String currentMac = macs.getString(i);
+                String currentPin = pins.getString(i);
 
-                Device newDevice = new Device(currentName.getString("name"), currentAddress.getString("address"),
-                                              currentMac.getString("mac"), currentPin.getString("pin").getBytes());
+                Device newDevice = new Device(currentName, currentAddress,
+                                              currentMac, currentPin.getBytes());
 
                 addDeviceToCheckList(newDevice);
             }
@@ -123,13 +157,6 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
     public void addDeviceToCheckList(Device device)
     {
         this.checkList.add(device);
-    }
-
-    private void addDevice(Device device)
-    {
-        this.devices.add(device);
-        Log.d("New device", "added device " + device.getAddress());
-        main.getAdapter().notifyDataSetChanged();
     }
 
     private Boolean isDeviceValid(Device device)

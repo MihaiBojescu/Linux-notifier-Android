@@ -25,6 +25,11 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -54,20 +59,21 @@ public class MainActivity extends AppCompatActivity {
         this.notifications = new LinkedList<>();
         this.pingService = PingService.getInstance(myIpAddress, this);
         this.pingService.start();
-        this.communicatorThread = new NetworkCommunicator();
+        this.communicatorThread = NetworkCommunicator.getInstance();
         this.communicatorThread.start();
 
         this.deviceHandler = DeviceHandler.getInstance(this);
         this.deviceHandler.execute();
+        this.deviceHandler.getDevicesFromFile();
 
         this.notificationBroadcastReceiver = new NotificationBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter("dev.mihaibojescu.linuxnotifier");
         registerReceiver(notificationBroadcastReceiver, intentFilter);
 
 
-        this.pingService.clearPingList();
-        for(int i = 0; i < 255; i++)
-            this.deviceHandler.addDeviceToCheckList(new Device("test", this.myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i), "test", "test"));
+        //this.pingService.clearPingList();
+        //for(int i = 0; i < 255; i++)
+          //  this.deviceHandler.addDeviceToCheckList(new Device("test", this.myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i), "test", "test"));
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
@@ -77,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerViewAdapter = new RecyclerViewAdapter(deviceHandler.getDeviceList());
         recyclerView.setAdapter(recyclerViewAdapter);
 
-        ((SeekBar)findViewById(R.id.seekBar)).setProgress(100);
+        ((SeekBar)findViewById(R.id.seekBar)).setProgress(200);
         pingService.updateInterval(((SeekBar)findViewById(R.id.seekBar)).getProgress());
         ((SeekBar)findViewById(R.id.seekBar)).setOnSeekBarChangeListener(new SeekBarHandler());
     }
@@ -153,7 +159,17 @@ public class MainActivity extends AppCompatActivity {
     {
         @Override
         public void onClick(View view, int position) {
-            communicatorThread.pushMessageToIP(deviceHandler.getHostByIndex(position).getAddress(), 5005, ((EditText)findViewById(R.id.editText)).getText().toString());
+            JSONObject message = new JSONObject();
+            try {
+                message.put("reason", "auth");
+                message.put("auth request from", myIpAddress);
+                message.put("address", myIpAddress);
+                message.put("with pin", deviceHandler.getHostByIndex(position).getPin());
+                //message.put("auth request", ((EditText)findViewById(R.id.editText)).getText().toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            communicatorThread.pushMessageToIP(deviceHandler.getHostByIndex(position).getAddress(), 5005, message);
         }
 
         @Override

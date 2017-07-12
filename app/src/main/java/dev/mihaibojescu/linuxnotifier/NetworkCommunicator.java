@@ -2,6 +2,8 @@ package dev.mihaibojescu.linuxnotifier;
 
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -20,22 +22,31 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class NetworkCommunicator extends Thread {
 
+    private static NetworkCommunicator instance = null;
     private BlockingQueue<String> hosts;
     private BlockingQueue<Integer> ports;
-    private BlockingQueue<String> messages;
-    private BlockingQueue<String> receivedMessages;
+    private BlockingQueue<JSONObject> messages;
+    private BlockingQueue<JSONObject> receivedMessages;
     private Socket socket;
     private BufferedReader streamIn;
     private BufferedWriter streamOut;
     private Integer interval;
 
-    public NetworkCommunicator()
+    private NetworkCommunicator()
     {
-        this.hosts = new LinkedBlockingQueue<String>();
-        this.ports = new LinkedBlockingQueue<Integer>();
-        this.messages = new LinkedBlockingQueue<String>();
-        this.receivedMessages = new LinkedBlockingQueue<String>();
-        this.interval = 50;
+        this.hosts = new LinkedBlockingQueue<>();
+        this.ports = new LinkedBlockingQueue<>();
+        this.messages = new LinkedBlockingQueue<>();
+        this.receivedMessages = new LinkedBlockingQueue<>();
+        this.interval = 200;
+    }
+
+    public static NetworkCommunicator getInstance()
+    {
+        if(instance == null)
+            instance = new NetworkCommunicator();
+
+        return instance;
     }
 
     @Override
@@ -44,23 +55,24 @@ public class NetworkCommunicator extends Thread {
             try {
                 String host = this.hosts.take();
                 Integer port = this.ports.take();
-                String currentMessage = this.messages.take();
-                String receivedMessage = "";
+                JSONObject currentMessage = this.messages.take();
+                JSONObject receivedMessage = null;
 
                 Log.d("IP and port", host + ":" + port);
-                Log.d("Message", currentMessage);
+                Log.d("Message", currentMessage.toString());
                 if(this.socket == null || this.socket.isClosed() || !this.socket.isConnected())
                     this.connect(host, port);
 
-                this.sendMessage(currentMessage);
+                this.sendMessage(currentMessage.toString());
                 try
                 {
-                    if ((receivedMessage = this.receiveMessage()) != null)
+                    if ((receivedMessage = new JSONObject(this.receiveMessage())) != null)
                         this.receivedMessages.add(receivedMessage);
                 }
                 catch (Exception e)
                 {
                     Log.e("Error", "No message received from host");
+                    this.receivedMessages.add(receivedMessage);
                 }
 
                 this.disconnect();
@@ -130,14 +142,14 @@ public class NetworkCommunicator extends Thread {
         }
     }
 
-    public void pushMessageToIP(String IP, Integer port, String message)
+    public void pushMessageToIP(String IP, Integer port, JSONObject message)
     {
         this.hosts.add(IP);
         this.ports.add(port);
         this.messages.add(message);
     }
 
-    public String getMessage()
+    public JSONObject getResponse()
     {
         try {
             return this.receivedMessages.take();

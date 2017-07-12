@@ -47,7 +47,7 @@ public class PingService extends Thread {
 
     public void setParams(String myIP, MainActivity main)
     {
-        this.interval = 50;
+        this.interval = 200;
         this.pingQueue = new LinkedBlockingQueue<>();
         this.responses = new LinkedBlockingQueue<>();
         this.myIp = myIP;
