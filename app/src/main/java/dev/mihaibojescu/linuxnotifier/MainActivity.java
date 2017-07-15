@@ -165,7 +165,6 @@ public class MainActivity extends AppCompatActivity {
                 message.put("auth request from", myIpAddress);
                 message.put("address", myIpAddress);
                 message.put("with pin", deviceHandler.getHostByIndex(position).getPin());
-                //message.put("auth request", ((EditText)findViewById(R.id.editText)).getText().toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }

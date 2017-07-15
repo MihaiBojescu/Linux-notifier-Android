@@ -3,4 +3,5 @@
     <string name="service_name">NotificationReceiver</string>
     <string name="refresh">Refresh</string>
     <string name="renewkeys">Renew keys</string>
+    <string name="notice">Note: Start the client on your GNU/Linux computer before performing a refresh.</string>
 </resources>

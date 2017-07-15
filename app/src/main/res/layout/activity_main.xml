@@ -10,26 +10,14 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="dev.mihaibojescu.linuxnotifier.MainActivity">
 
-    <EditText
-        android:id="@+id/editText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/recycler_view"
-        android:layout_marginTop="8dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Text to send" />
-
     <TextView
         android:id="@+id/responsetime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Response time:"
+        android:layout_below="@+id/recycler_view"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/editText"
-        android:text="Response time:" />
+        android:layout_alignParentStart="true" />
 
     <SeekBar
         android:id="@+id/seekBar"
@@ -42,24 +30,6 @@
         android:layout_below="@+id/responsetime"
         android:max="1000" />
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/seekBar"
-        android:text="Errors:" />
-
-    <TextView
-        android:id="@+id/response"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Response:"
-        android:layout_below="@+id/textView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
@@ -71,6 +41,15 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/seekBar"
+        android:text="@string/notice" />
 
 
 </RelativeLayout>
