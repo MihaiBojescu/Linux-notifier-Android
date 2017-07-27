@@ -9,10 +9,12 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
+import java.io.StringReader;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 
 /**
@@ -22,10 +24,30 @@ import java.util.Enumeration;
 public class NetworkTools {
 
     private Activity activity;
+    private static NetworkTools instance = null;
 
-    public NetworkTools(Activity main)
+    private NetworkTools() {}
+
+    private void setParams(Activity main)
     {
-        activity = main;
+        this.activity = main;
+    }
+
+    public static NetworkTools getInstance()
+    {
+        if(instance == null)
+            instance = new NetworkTools();
+
+        return instance;
+    }
+
+    public static NetworkTools getInstance(Activity main)
+    {
+        if(instance == null)
+            instance = new NetworkTools();
+
+        instance.setParams(main);
+        return instance;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -71,5 +93,10 @@ public class NetworkTools {
             Log.e("Error: ", ex.toString());
         }
         return null;
+    }
+
+    public String getMyHostname()
+    {
+        return Build.MODEL;
     }
 }

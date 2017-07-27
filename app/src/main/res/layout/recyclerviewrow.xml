@@ -21,4 +21,15 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/devicename" />
 
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/devicename"
+        android:layout_alignBottom="@+id/devicename"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:text="Connected"
+        android:visibility="invisible" />
+
 </RelativeLayout>

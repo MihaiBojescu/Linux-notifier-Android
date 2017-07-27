@@ -72,7 +72,7 @@ public class IOClass {
         BufferedWriter writer;
         try
         {
-            writer = new BufferedWriter(new FileWriter(currentFile));
+            writer = new BufferedWriter(new FileWriter(currentFile, false));
             writer.write(input.toString());
             writer.close();
         }

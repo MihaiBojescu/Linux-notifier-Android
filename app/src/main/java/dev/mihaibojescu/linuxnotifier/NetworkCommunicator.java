@@ -71,6 +71,7 @@ public class NetworkCommunicator extends Thread {
                 }
                 catch (Exception e)
                 {
+                    e.printStackTrace();
                     Log.e("Error", "No message received from host");
                     this.receivedMessages.add(receivedMessage);
                 }
@@ -89,7 +90,7 @@ public class NetworkCommunicator extends Thread {
             if(this.socket == null || this.socket.isClosed() || !this.socket.isConnected())
             {
                 this.socket = new Socket(host, port);
-                this.socket.setSoTimeout(this.interval);
+                this.socket.setSoTimeout(10000);
                 this.streamOut = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                 this.streamIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             }
@@ -168,5 +169,10 @@ public class NetworkCommunicator extends Thread {
             catch(SocketException e)
             {
             }
+    }
+
+    public int getInterval()
+    {
+        return this.interval;
     }
 }

@@ -14,6 +14,7 @@ public class Device {
     public enum statuses
     {
         NEW,
+        WAITING_AUTH,
         CONNECTED
     };
 

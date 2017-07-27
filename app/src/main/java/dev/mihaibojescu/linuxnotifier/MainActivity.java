@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -51,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
 
-        NetworkTools tools = new NetworkTools(this);
+        NetworkTools tools = NetworkTools.getInstance(this);
         IOClass ioClass = IOClass.getInstance();
         ioClass.setContext(this.getApplicationContext());
 
@@ -71,9 +72,9 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(notificationBroadcastReceiver, intentFilter);
 
 
-        //this.pingService.clearPingList();
-        //for(int i = 0; i < 255; i++)
-          //  this.deviceHandler.addDeviceToCheckList(new Device("test", this.myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i), "test", "test"));
+        this.pingService.clearPingList();
+        //for(int i = 2; i < 254; i++)
+            //this.deviceHandler.addDeviceToCheckList(new Device("", this.myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i), "", ""));
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
@@ -143,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
                 Authentification auth = Authentification.getInstance();
                 auth.createNewKeys(2048);
                 try {
-                    ((TextView)findViewById(R.id.response)).setText(auth.getPublicKey().getEncoded().toString());
+                    Toast.makeText(this.getApplicationContext(), auth.getPublicKey().getEncoded().toString(), Toast.LENGTH_LONG).show();
                 } catch(Exception e) {
 
                 }
@@ -155,20 +156,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public class ClickListenerExample implements ClickListener
+    private class ClickListenerExample implements ClickListener
     {
         @Override
         public void onClick(View view, int position) {
-            JSONObject message = new JSONObject();
-            try {
-                message.put("reason", "auth");
-                message.put("auth request from", myIpAddress);
-                message.put("address", myIpAddress);
-                message.put("with pin", deviceHandler.getHostByIndex(position).getPin());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            communicatorThread.pushMessageToIP(deviceHandler.getHostByIndex(position).getAddress(), 5005, message);
+            Log.d("Info: ", deviceHandler.getHostByIndex(position).getStatus().toString());
+            deviceHandler.addPriorityDeviceToCheckList(deviceHandler.getHostByIndex(position));
         }
 
         @Override
