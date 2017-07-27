@@ -61,8 +61,9 @@ public class NetworkCommunicator extends Thread {
                 Log.d("IP and port", host + ":" + port);
                 Log.d("Message", currentMessage.toString());
                 if(this.socket == null || this.socket.isClosed() || !this.socket.isConnected())
+                {
                     this.connect(host, port);
-
+                }
                 this.sendMessage(currentMessage.toString());
                 try
                 {

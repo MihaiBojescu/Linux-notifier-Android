@@ -1,7 +1,6 @@
 package dev.mihaibojescu.linuxnotifier;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -10,9 +9,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by michael on 12.07.2017.
@@ -62,13 +59,28 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
                 device = this.checkList.takeLast();
 
                 if(!devices.contains(device))
-                    if(isDeviceValid(device))
+                {
+                    if (isDeviceValid(device))
+                    {
                         publishProgress(device);
-
-                if (device.getStatus() == Device.statuses.NEW)
-                    requestInfo(device);
-                else if (device.getStatus() == Device.statuses.WAITING_AUTH)
-                    authentificateDevice(device);
+                        if (device.getStatus() == Device.statuses.NEW)
+                            requestInfo(device);
+                        else if (device.getStatus() == Device.statuses.WAITING_AUTH)
+                            authentificateDevice(device);
+                    }
+                }
+                else
+                {
+                    switch(device.getStatus())
+                    {
+                        case NEW:
+                            requestInfo(device);
+                            break;
+                        case WAITING_AUTH:
+                            authentificateDevice(device);
+                            break;
+                    }
+                }
             }
             catch (InterruptedException e)
             {
@@ -80,7 +92,10 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
     @Override
     protected void onProgressUpdate(Device... device)
     {
-        this.addDevice(device[0]);
+        if(device != null && device[0] != null)
+            this.addDevice(device[0]);
+        else
+            main.getAdapter().notifyDataSetChanged();
     }
 
     private void addDevice(Device device)
@@ -141,7 +156,6 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
             request.put("name", NetworkTools.getInstance().getMyHostname());
             request.put("address", NetworkTools.getInstance().getLocalIpAddress());
             request.put("pin", device.getPin());
-            Log.d("made json!", request.toString());
         }
         catch (JSONException e)
         {
@@ -158,7 +172,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
         if(response != null)
             try
             {
-                if(response.get("response") == "1")
+                if(response.getString("response").equals("1"))
                 {
                     device.setStatus(Device.statuses.CONNECTED);
                     this.writeDevicesToFile();
@@ -178,40 +192,36 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
 
         if(result == null) return;
 
-        JSONArray names = null;
-        JSONArray addresses = null;
-        JSONArray macs = null;
-        JSONArray pins = null;
-
         try
         {
-            names = result.getJSONArray("name");
-            addresses = result.getJSONArray("address");
-            macs = result.getJSONArray("mac");
-            pins = result.getJSONArray("pin");
+            JSONArray names = result.getJSONArray("name");
+            JSONArray addresses = result.getJSONArray("address");
+            JSONArray macs = result.getJSONArray("mac");
+            JSONArray pins = result.getJSONArray("pin");
+
+            for (int i = 0; i < names.length(); i++)
+            {
+                try
+                {
+                    String currentName = names.getString(i);
+                    String currentAddress = addresses.getString(i);
+                    String currentMac = macs.getString(i);
+                    String currentPin = pins.getString(i);
+
+                    Device newDevice = new Device(currentName, currentAddress,
+                            currentMac, currentPin.getBytes());
+
+                    addDeviceToCheckList(newDevice);
+                }
+                catch (JSONException e)
+                {
+                    e.printStackTrace();
+                }
+            }
         }
         catch (JSONException e)
         {
             e.printStackTrace();
-        }
-
-        for(int i = 0; i < names.length(); i++)
-        {
-            try {
-                String currentName = names.getString(i);
-                String currentAddress = addresses.getString(i);
-                String currentMac = macs.getString(i);
-                String currentPin = pins.getString(i);
-
-                Device newDevice = new Device(currentName, currentAddress,
-                                              currentMac, currentPin.getBytes());
-
-                addDeviceToCheckList(newDevice);
-            }
-            catch (JSONException e)
-            {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -223,19 +233,30 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
         JSONObject output = new JSONObject();
         try
         {
-            for(Device currentDevice: this.devices)
+            JSONArray names = new JSONArray();
+            JSONArray addresses = new JSONArray();
+            JSONArray macs = new JSONArray();
+            JSONArray pins = new JSONArray();
+
+            for (Device currentDevice : this.devices)
             {
-                output.put("name", currentDevice.getName());
-                output.put("address", currentDevice.getAddress());
-                output.put("mac", currentDevice.getMac());
-                output.put("pin", currentDevice.getPin());
+                names.put(currentDevice.getName());
+                addresses.put(currentDevice.getAddress());
+                macs.put(currentDevice.getMac());
+                pins.put(currentDevice.getPin());
             }
+
+            output.put("name", names);
+            output.put("address", addresses);
+            output.put("mac", macs);
+            output.put("pin", pins);
+
+            ioClass.writeToFile(output);
         }
         catch (JSONException e)
         {
             e.printStackTrace();
         }
-        ioClass.writeToFile(output);
     }
 
     private Boolean isDeviceValid(Device device)
@@ -247,6 +268,25 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
             return true;
         else
             return false;
+    }
+
+    public void cleanCache()
+    {
+        IOClass ioClass = IOClass.getInstance();
+        ioClass.openFile("devices.json");
+        ioClass.writeToFile(new JSONObject());
+        this.devices.clear();
+        this.publishProgress(null);
+    }
+
+    public void scanSubnet()
+    {
+        String myIP = NetworkTools.getInstance().getLocalIpAddress();
+        String address = myIP.substring(0, myIP.lastIndexOf('.')) + '.';
+        PingService.getInstance().clearPingList();
+
+        for (int i = 2; i < 254; i++)
+            this.addDeviceToCheckList(new Device("", address + String.valueOf(i), "", ""));
     }
 
     public Device getHostByIndex(int index)

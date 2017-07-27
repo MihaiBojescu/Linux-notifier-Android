@@ -16,9 +16,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
@@ -26,11 +24,6 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.net.Inet4Address;
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -63,18 +56,22 @@ public class MainActivity extends AppCompatActivity {
         this.communicatorThread = NetworkCommunicator.getInstance();
         this.communicatorThread.start();
 
+
+        SeekBar seekbar = ((SeekBar)findViewById(R.id.seekBar));
+        pingService.updateInterval(seekbar.getProgress());
+        communicatorThread.setInterval(seekbar.getProgress());
+        seekbar.setOnSeekBarChangeListener(new SeekBarHandler());
+
         this.deviceHandler = DeviceHandler.getInstance(this);
         this.deviceHandler.execute();
         this.deviceHandler.getDevicesFromFile();
+        if(deviceHandler.getDeviceList().size() == 0)
+            deviceHandler.scanSubnet();
 
         this.notificationBroadcastReceiver = new NotificationBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter("dev.mihaibojescu.linuxnotifier");
         registerReceiver(notificationBroadcastReceiver, intentFilter);
 
-
-        this.pingService.clearPingList();
-        //for(int i = 2; i < 254; i++)
-            //this.deviceHandler.addDeviceToCheckList(new Device("", this.myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.' + String.valueOf(i), "", ""));
 
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
@@ -83,10 +80,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnItemTouchListener(new RecyclerViewTouchHandler(getApplicationContext(), recyclerView, new ClickListenerExample()));
         recyclerViewAdapter = new RecyclerViewAdapter(deviceHandler.getDeviceList());
         recyclerView.setAdapter(recyclerViewAdapter);
-
-        ((SeekBar)findViewById(R.id.seekBar)).setProgress(200);
-        pingService.updateInterval(((SeekBar)findViewById(R.id.seekBar)).getProgress());
-        ((SeekBar)findViewById(R.id.seekBar)).setOnSeekBarChangeListener(new SeekBarHandler());
     }
 
     public Action getIndexApiAction() {
@@ -134,21 +127,27 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId())
         {
             case R.id.refreshdevices:
-                String address = myIpAddress.substring(0, myIpAddress.lastIndexOf('.')) + '.';
-
-                for(int i = 0; i < 255; i++)
-                    this.deviceHandler.addDeviceToCheckList(new Device("", address + String.valueOf(i), "", ""));
+                deviceHandler.scanSubnet();
                 return true;
 
             case R.id.renewkeys:
                 Authentification auth = Authentification.getInstance();
                 auth.createNewKeys(2048);
-                try {
-                    Toast.makeText(this.getApplicationContext(), auth.getPublicKey().getEncoded().toString(), Toast.LENGTH_LONG).show();
-                } catch(Exception e) {
 
+                try
+                {
+                    Toast.makeText(this.getApplicationContext(), auth.getPublicKey().getEncoded().toString(), Toast.LENGTH_LONG).show();
                 }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                }
+
                 Toast.makeText(this, "Not implemented yet", Toast.LENGTH_SHORT).show();
+                return true;
+
+            case R.id.cleancache:
+                this.deviceHandler.cleanCache();
                 return true;
 
             default:

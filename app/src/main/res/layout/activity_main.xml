@@ -28,7 +28,8 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/responsetime"
-        android:max="1000" />
+        android:max="1000"
+        android:progress="100" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
