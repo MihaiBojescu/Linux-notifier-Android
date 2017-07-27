@@ -1,4 +1,4 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.UiTools;
 
 import android.view.View;
 

@@ -1,4 +1,4 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.NotificationHandlers;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,7 +11,8 @@ import android.widget.Toast;
 public class NotificationBroadcastReceiver extends android.content.BroadcastReceiver
 {
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(Context context, Intent intent)
+    {
         Toast.makeText(context, intent.getStringExtra("notification_event"), Toast.LENGTH_SHORT).show();
     }
 }

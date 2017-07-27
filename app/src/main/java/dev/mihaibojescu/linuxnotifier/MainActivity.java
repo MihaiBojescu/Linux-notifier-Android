@@ -1,7 +1,5 @@
 package dev.mihaibojescu.linuxnotifier;
 
-import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
@@ -27,7 +25,19 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class MainActivity extends AppCompatActivity {
+import dev.mihaibojescu.linuxnotifier.Crypto.CryptHandler;
+import dev.mihaibojescu.linuxnotifier.IO.IOClass;
+import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkCommunicator;
+import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkTools;
+import dev.mihaibojescu.linuxnotifier.NetworkTools.PingService;
+import dev.mihaibojescu.linuxnotifier.NotificationHandlers.NotificationBroadcastReceiver;
+import dev.mihaibojescu.linuxnotifier.DeviceHandlers.DeviceHandler;
+import dev.mihaibojescu.linuxnotifier.UiTools.ClickListener;
+import dev.mihaibojescu.linuxnotifier.UiTools.RecyclerViewAdapter;
+import dev.mihaibojescu.linuxnotifier.UiTools.RecyclerViewTouchHandler;
+
+public class MainActivity extends AppCompatActivity
+{
 
     private GoogleApiClient client;
     private PingService pingService;
@@ -38,9 +48,11 @@ public class MainActivity extends AppCompatActivity {
     private String myIpAddress;
     private NotificationBroadcastReceiver notificationBroadcastReceiver;
 
+    
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -65,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         this.deviceHandler = DeviceHandler.getInstance(this);
         this.deviceHandler.execute();
         this.deviceHandler.getDevicesFromFile();
-        if(deviceHandler.getDeviceList().size() == 0)
+        if (deviceHandler.getDeviceList().size() == 0)
             deviceHandler.scanSubnet();
 
         this.notificationBroadcastReceiver = new NotificationBroadcastReceiver();
@@ -82,7 +94,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(recyclerViewAdapter);
     }
 
-    public Action getIndexApiAction() {
+    public Action getIndexApiAction()
+    {
         Thing object = new Thing.Builder()
                 .setName("Main Page") // TODO: Define a title for the content shown.
                 // TODO: Make sure this auto-generated URL is correct.
@@ -100,14 +113,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onStart() {
+    public void onStart()
+    {
         super.onStart();
         client.connect();
         AppIndex.AppIndexApi.start(client, getIndexApiAction());
     }
 
     @Override
-    public void onStop() {
+    public void onStop()
+    {
         super.onStop();
         AppIndex.AppIndexApi.end(client, getIndexApiAction());
         client.disconnect();
@@ -122,6 +137,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onDestroy()
+    {
+        if (notificationBroadcastReceiver != null)
+        {
+            unregisterReceiver(notificationBroadcastReceiver);
+            notificationBroadcastReceiver = null;
+        }
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId())
@@ -131,14 +157,14 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.renewkeys:
-                Authentification auth = Authentification.getInstance();
+                CryptHandler auth = CryptHandler.getInstance();
                 auth.createNewKeys(2048);
 
                 try
                 {
                     Toast.makeText(this.getApplicationContext(), auth.getPublicKey().getEncoded().toString(), Toast.LENGTH_LONG).show();
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     e.printStackTrace();
                 }
@@ -158,40 +184,38 @@ public class MainActivity extends AppCompatActivity {
     private class ClickListenerExample implements ClickListener
     {
         @Override
-        public void onClick(View view, int position) {
+        public void onClick(View view, int position)
+        {
             Log.d("Info: ", deviceHandler.getHostByIndex(position).getStatus().toString());
             deviceHandler.addPriorityDeviceToCheckList(deviceHandler.getHostByIndex(position));
         }
 
         @Override
-        public void onLongClick(View view, int position) {
+        public void onLongClick(View view, int position)
+        {
 
         }
     }
 
-    public class SeekBarHandler implements SeekBar.OnSeekBarChangeListener {
+    public class SeekBarHandler implements SeekBar.OnSeekBarChangeListener
+    {
         @Override
-        public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+        public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser)
+        {
             pingService.updateInterval(progress);
             communicatorThread.setInterval(progress);
         }
 
         @Override
-        public void onStartTrackingTouch(android.widget.SeekBar seekBar) {
+        public void onStartTrackingTouch(android.widget.SeekBar seekBar)
+        {
 
         }
 
         @Override
-        public void onStopTrackingTouch(android.widget.SeekBar seekBar) {
+        public void onStopTrackingTouch(android.widget.SeekBar seekBar)
+        {
 
-        }
-    }
-
-    public class NotificationBroadcastReceiver extends android.content.BroadcastReceiver
-    {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-                Toast.makeText(context, intent.getStringExtra("notification_event"), Toast.LENGTH_SHORT).show();
         }
     }
 }

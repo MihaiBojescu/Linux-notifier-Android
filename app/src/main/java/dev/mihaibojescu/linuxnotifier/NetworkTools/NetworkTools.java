@@ -1,4 +1,4 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.NetworkTools;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,22 +9,22 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
-import java.io.StringReader;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Enumeration;
 
 /**
  * Created by michael on 10.07.2017.
  */
 
-public class NetworkTools {
+public class NetworkTools
+{
 
     private Activity activity;
     private static NetworkTools instance = null;
+
 
     private NetworkTools() {}
 
@@ -35,7 +35,7 @@ public class NetworkTools {
 
     public static NetworkTools getInstance()
     {
-        if(instance == null)
+        if (instance == null)
             instance = new NetworkTools();
 
         return instance;
@@ -43,7 +43,7 @@ public class NetworkTools {
 
     public static NetworkTools getInstance(Activity main)
     {
-        if(instance == null)
+        if (instance == null)
             instance = new NetworkTools();
 
         instance.setParams(main);
@@ -57,13 +57,18 @@ public class NetworkTools {
                 (Context.CONNECTIVITY_SERVICE));
         boolean isWifiConnected = false;
         Network[] networks = connectivityManager.getAllNetworks();
-        if (networks == null) {
+
+        if (networks == null)
             isWifiConnected = false;
-        } else {
-            for (Network network : networks) {
+        else
+        {
+            for (Network network : networks)
+            {
                 NetworkInfo info = connectivityManager.getNetworkInfo(network);
-                if (info != null && info.getType() == ConnectivityManager.TYPE_WIFI) {
-                    if (info.isAvailable() && info.isConnected()) {
+                if (info != null && info.getType() == ConnectivityManager.TYPE_WIFI)
+                {
+                    if (info.isAvailable() && info.isConnected())
+                    {
                         isWifiConnected = true;
                         break;
                     }
@@ -73,23 +78,32 @@ public class NetworkTools {
         return isWifiConnected;
     }
 
-    public String getLocalIpAddress() {
+    public String getLocalIpAddress()
+    {
         ConnectivityManager connectivityManager = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mWifi = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-        if (mWifi.isConnected()) {
+        if (mWifi.isConnected())
+        {
             // Do whatever
-        }try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+        }
+        try
+        {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
+            {
                 NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();)
+                {
                     InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address)
+                    {
                         return inetAddress.getHostAddress();
                     }
                 }
             }
-        } catch (SocketException ex) {
+        }
+        catch (SocketException ex)
+        {
             Log.e("Error: ", ex.toString());
         }
         return null;

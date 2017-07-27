@@ -1,4 +1,4 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.DeviceHandlers;
 
 import android.os.AsyncTask;
 
@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import dev.mihaibojescu.linuxnotifier.Crypto.CryptHandler;
+import dev.mihaibojescu.linuxnotifier.IO.IOClass;
+import dev.mihaibojescu.linuxnotifier.MainActivity;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkCommunicator;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkTools;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.PingService;
@@ -19,11 +22,14 @@ import dev.mihaibojescu.linuxnotifier.NetworkTools.PingService;
  * Created by michael on 12.07.2017.
  */
 
-public class DeviceHandler extends AsyncTask<Void, Device, Void> {
+public class DeviceHandler extends AsyncTask<Void, Device, Void>
+{
+
     private static DeviceHandler instance = null;
     private MainActivity main;
     private List<Device> devices;
     private BlockingDeque<Device> checkList;
+
 
     private DeviceHandler()
     {
@@ -33,7 +39,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
 
     public static DeviceHandler getInstance()
     {
-        if(instance == null)
+        if (instance == null)
             instance = new DeviceHandler();
 
         return instance;
@@ -41,7 +47,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
 
     public static DeviceHandler getInstance(MainActivity main)
     {
-        if(instance == null)
+        if (instance == null)
             instance = new DeviceHandler();
 
         instance.setParams(main);
@@ -54,15 +60,16 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
-        while(true)
+    protected Void doInBackground(Void... params)
+    {
+        while (true)
         {
             Device device = null;
             try
             {
                 device = this.checkList.takeLast();
 
-                if(!devices.contains(device))
+                if (!devices.contains(device))
                 {
                     if (isDeviceValid(device))
                     {
@@ -96,7 +103,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
     @Override
     protected void onProgressUpdate(Device... device)
     {
-        if(device != null && device[0] != null)
+        if (device != null && device[0] != null)
             this.addDevice(device[0]);
         else
             main.getAdapter().notifyDataSetChanged();
@@ -104,7 +111,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
 
     private void addDevice(Device device)
     {
-        device.setPin(Authentification.getInstance().createPin(4));
+        device.setPin(CryptHandler.getInstance().createPin(4));
         device.setStatus(Device.statuses.NEW);
         this.devices.add(device);
         main.getAdapter().notifyDataSetChanged();
@@ -124,6 +131,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
     {
         NetworkCommunicator communicator = NetworkCommunicator.getInstance();
         JSONObject request = new JSONObject();
+
         try
         {
             request.put("reason", "request info");
@@ -132,10 +140,11 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
         {
             e.printStackTrace();
         }
+
         communicator.pushMessageToIP(device.getAddress(), 5005, request);
         JSONObject response = communicator.getResponse();
 
-        if(response != null)
+        if (response != null)
             try
             {
                 device.setName(response.getString("name"));
@@ -173,10 +182,10 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
         JSONObject response = communicator.getResponse();
         communicator.setInterval(lastInterval);
 
-        if(response != null)
+        if (response != null)
             try
             {
-                if(response.getString("response").equals("1"))
+                if (response.getString("response").equals("1"))
                 {
                     device.setStatus(Device.statuses.CONNECTED);
                     this.writeDevicesToFile();
@@ -194,7 +203,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
         ioClass.openFile("devices.json");
         JSONObject result = ioClass.readFile();
 
-        if(result == null) return;
+        if (result == null) return;
 
         try
         {
@@ -233,8 +242,8 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
     {
         IOClass ioClass = IOClass.getInstance();
         ioClass.openFile("devices.json");
-
         JSONObject output = new JSONObject();
+
         try
         {
             JSONArray names = new JSONArray();
@@ -268,7 +277,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void> {
         PingService service = PingService.getInstance();
         service.addHost(device.getAddress());
 
-        if(service.wasLastValid())
+        if (service.wasLastValid())
             return true;
         else
             return false;

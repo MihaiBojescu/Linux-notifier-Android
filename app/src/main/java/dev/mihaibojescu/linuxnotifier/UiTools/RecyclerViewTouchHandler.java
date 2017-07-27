@@ -1,4 +1,4 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.UiTools;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;

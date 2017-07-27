@@ -1,18 +1,12 @@
-package dev.mihaibojescu.linuxnotifier;
-
-import android.os.AsyncTask;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+package dev.mihaibojescu.linuxnotifier.NetworkTools;
 
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadLocalRandom;
+
+import dev.mihaibojescu.linuxnotifier.MainActivity;
 
 /**
  * Created by michael on 03.05.2017.
@@ -30,7 +24,7 @@ public class PingService extends Thread {
 
     public static PingService getInstance()
     {
-        if(service == null)
+        if (service == null)
             service = new PingService();
 
         return service;
@@ -38,7 +32,7 @@ public class PingService extends Thread {
 
     public static PingService getInstance(String myIP, MainActivity main)
     {
-        if(service == null)
+        if (service == null)
             service = new PingService();
 
         service.setParams(myIP, main);
@@ -54,22 +48,25 @@ public class PingService extends Thread {
     }
 
     @Override
-    public void run() {
-        while (true) {
+    public void run()
+    {
+        while (true)
+        {
             String address = null;
 
-            try {
+            try
+            {
                 address = pingQueue.take();
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e)
+            {
                 e.printStackTrace();
             }
 
-            if (address != myIp &&
-                isPortUp(address))
+            if (address != myIp && isPortUp(address))
                 responses.add(true);
-            else {
+            else
                 responses.add(false);
-            }
         }
     }
 
@@ -81,7 +78,9 @@ public class PingService extends Thread {
             s.connect(new InetSocketAddress(address, port), interval);
             s.close();
             return true;
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             return false;
         }
 
@@ -94,9 +93,12 @@ public class PingService extends Thread {
 
     public Boolean wasLastValid()
     {
-        try {
+        try
+        {
             return responses.take();
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e)
+        {
             e.printStackTrace();
         }
         return true;

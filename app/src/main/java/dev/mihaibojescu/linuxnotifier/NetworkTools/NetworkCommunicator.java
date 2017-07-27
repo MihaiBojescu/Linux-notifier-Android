@@ -1,4 +1,4 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.NetworkTools;
 
 import android.util.Log;
 
@@ -11,8 +11,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -20,7 +18,8 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Created by michael on 03.05.2017.
  */
 
-public class NetworkCommunicator extends Thread {
+public class NetworkCommunicator extends Thread
+{
 
     private static NetworkCommunicator instance = null;
     private BlockingQueue<String> hosts;
@@ -31,6 +30,7 @@ public class NetworkCommunicator extends Thread {
     private BufferedReader streamIn;
     private BufferedWriter streamOut;
     private Integer interval;
+
 
     private NetworkCommunicator()
     {
@@ -43,16 +43,19 @@ public class NetworkCommunicator extends Thread {
 
     public static NetworkCommunicator getInstance()
     {
-        if(instance == null)
+        if (instance == null)
             instance = new NetworkCommunicator();
 
         return instance;
     }
 
     @Override
-    public void run() {
-        while (true) {
-            try {
+    public void run()
+    {
+        while (true)
+        {
+            try
+            {
                 String host = this.hosts.take();
                 Integer port = this.ports.take();
                 JSONObject currentMessage = this.messages.take();
@@ -60,11 +63,11 @@ public class NetworkCommunicator extends Thread {
 
                 Log.d("IP and port", host + ":" + port);
                 Log.d("Message", currentMessage.toString());
-                if(this.socket == null || this.socket.isClosed() || !this.socket.isConnected())
-                {
+                if (this.socket == null || this.socket.isClosed() || !this.socket.isConnected())
                     this.connect(host, port);
-                }
+
                 this.sendMessage(currentMessage.toString());
+
                 try
                 {
                     if ((receivedMessage = new JSONObject(this.receiveMessage())) != null)
@@ -78,7 +81,9 @@ public class NetworkCommunicator extends Thread {
                 }
 
                 this.disconnect();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 e.printStackTrace();
             }
         }
@@ -87,8 +92,9 @@ public class NetworkCommunicator extends Thread {
 
     private void connect(String host, int port)
     {
-        try {
-            if(this.socket == null || this.socket.isClosed() || !this.socket.isConnected())
+        try
+        {
+            if (this.socket == null || this.socket.isClosed() || !this.socket.isConnected())
             {
                 this.socket = new Socket(host, port);
                 this.socket.setSoTimeout(10000);
@@ -103,8 +109,9 @@ public class NetworkCommunicator extends Thread {
 
     private void disconnect()
     {
-        try {
-            if(this.socket != null && this.socket.isConnected())
+        try
+        {
+            if (this.socket != null && this.socket.isConnected())
             {
                 this.streamIn.close();
                 this.streamOut.close();
@@ -116,8 +123,10 @@ public class NetworkCommunicator extends Thread {
         }
     }
 
-    private void sendMessage(String message){
-        try {
+    private void sendMessage(String message)
+    {
+        try
+        {
             streamOut.write(message);
             streamOut.flush();
         }
@@ -127,8 +136,10 @@ public class NetworkCommunicator extends Thread {
         }
     }
 
-    private String receiveMessage(){
-        try {
+    private String receiveMessage()
+    {
+        try
+        {
             String result = "";
             int charactersRead;
             char[] buffer = new char[1024];
@@ -153,7 +164,8 @@ public class NetworkCommunicator extends Thread {
 
     public JSONObject getResponse()
     {
-        try {
+        try
+        {
             return this.receivedMessages.take();
         }
         catch (Exception e) {
@@ -161,13 +173,16 @@ public class NetworkCommunicator extends Thread {
         }
     }
 
-    public void setInterval(Integer value) {
+    public void setInterval(Integer value)
+    {
         this.interval = value;
-        if(this.socket != null)
-            try {
+
+        if (this.socket != null)
+            try
+            {
                 this.socket.setSoTimeout(this.interval);
             }
-            catch(SocketException e)
+            catch (SocketException e)
             {
             }
     }

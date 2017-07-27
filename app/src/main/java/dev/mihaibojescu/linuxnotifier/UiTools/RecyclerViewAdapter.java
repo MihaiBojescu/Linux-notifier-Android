@@ -1,15 +1,15 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.UiTools;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.util.List;
+
+import dev.mihaibojescu.linuxnotifier.DeviceHandlers.Device;
+import dev.mihaibojescu.linuxnotifier.R;
 
 /**
  * Created by michael on 07.07.2017.

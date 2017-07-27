@@ -1,10 +1,12 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.DeviceHandlers;
 
 /**
  * Created by michael on 07.07.2017.
  */
 
-public class Device {
+public class Device
+{
+
     private String name;
     private String address;
     private String mac;
@@ -17,6 +19,7 @@ public class Device {
         WAITING_AUTH,
         CONNECTED
     };
+
 
     public Device()
     {

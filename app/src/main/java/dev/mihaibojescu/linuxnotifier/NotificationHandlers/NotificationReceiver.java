@@ -1,4 +1,4 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.NotificationHandlers;
 
 import android.content.Intent;
 import android.os.Build;
@@ -9,13 +9,19 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.TextView;
 
+import dev.mihaibojescu.linuxnotifier.MainActivity;
+
 /**
  * Created by michael on 05.05.2017.
  */
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class NotificationReceiver extends NotificationListenerService{
+public class NotificationReceiver extends NotificationListenerService
+{
+
     private MainActivity main;
+
+
     public NotificationReceiver(MainActivity main)
     {
         this.main = main;
@@ -27,7 +33,8 @@ public class NotificationReceiver extends NotificationListenerService{
     }
 
     @Override
-    public void onNotificationRemoved(StatusBarNotification sbn){
+    public void onNotificationRemoved(StatusBarNotification sbn)
+    {
     }
 
     @Override

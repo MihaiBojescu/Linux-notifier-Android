@@ -1,4 +1,4 @@
-package dev.mihaibojescu.linuxnotifier;
+package dev.mihaibojescu.linuxnotifier.Crypto;
 
 import android.util.Log;
 
@@ -11,35 +11,37 @@ import java.security.SecureRandom;
 /**
  * Created by michael on 08.07.2017.
  *
- * Authentification singleton. Used for creating pins and public/private keys.
+ * CryptHandler singleton. Used for creating pins and public/private keys.
  */
 
-public class Authentification {
+public class CryptHandler
+{
 
-    private static Authentification instance = null;
+    private static CryptHandler instance = null;
     private KeyPairGenerator kpg;
     private KeyPair keys;
 
 
-    private Authentification()
+    private CryptHandler()
     {
     }
 
-    public static Authentification getInstance()
+    public static CryptHandler getInstance()
     {
-        if(instance == null)
-            instance = new Authentification();
+        if (instance == null)
+            instance = new CryptHandler();
 
         return instance;
     }
 
     public void createKeyPairGenerator(int size)
     {
-        if(kpg == null)
+        if (kpg == null)
             try
             {
                 kpg = KeyPairGenerator.getInstance("RSA");
-            } catch(NoSuchAlgorithmException e)
+            }
+            catch (NoSuchAlgorithmException e)
             {
                 Log.e("Error", "Algorithm 'RSA' cannot be used!");
             }
@@ -47,7 +49,7 @@ public class Authentification {
 
     public void createNewKeys(int size)
     {
-        if(kpg == null)
+        if (kpg == null)
             createKeyPairGenerator(size);
 
         keys = kpg.genKeyPair();
@@ -55,7 +57,7 @@ public class Authentification {
 
     public PublicKey getPublicKey() throws Exception
     {
-        if(keys == null)
+        if (keys == null)
             throw new Exception("Keys not available, need to be created first.");
 
         return keys.getPublic();
@@ -63,7 +65,7 @@ public class Authentification {
 
     public byte[] getPrivateKey() throws Exception
     {
-        if(keys == null)
+        if (keys == null)
             throw new Exception("Keys not available, need to be created first");
 
         return keys.getPrivate().getEncoded().toString().getBytes();
