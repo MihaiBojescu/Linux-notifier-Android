@@ -6,8 +6,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
-import dev.mihaibojescu.linuxnotifier.ClickListener;
-import dev.mihaibojescu.linuxnotifier.MainActivity;
+import dev.mihaibojescu.linuxnotifier.UiTools.ClickListener;
 
 public class RecyclerViewTouchHandler implements RecyclerView.OnItemTouchListener {
 

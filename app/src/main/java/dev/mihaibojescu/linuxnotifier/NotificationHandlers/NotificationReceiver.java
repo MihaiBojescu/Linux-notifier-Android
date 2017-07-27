@@ -30,8 +30,16 @@ public class NotificationReceiver extends NotificationListenerService{
     public void onNotificationRemoved(StatusBarNotification sbn){
     }
 
-
+    @Override
     public void onNotificationPosted (StatusBarNotification sbn, NotificationListenerService.RankingMap rankingMap)
+    {
+        Intent intent = new Intent("dev.mihaibojescu.linuxnotifier");
+        intent.putExtra("notification_event", "onNotificationPosted :" + sbn.getPackageName() + "\n");
+        sendBroadcast(intent);
+    }
+
+    @Override
+    public void onNotificationPosted (StatusBarNotification sbn)
     {
         Intent intent = new Intent("dev.mihaibojescu.linuxnotifier");
         intent.putExtra("notification_event", "onNotificationPosted :" + sbn.getPackageName() + "\n");

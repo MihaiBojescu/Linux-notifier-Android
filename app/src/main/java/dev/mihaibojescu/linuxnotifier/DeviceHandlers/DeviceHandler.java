@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkCommunicator;
+import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkTools;
+import dev.mihaibojescu.linuxnotifier.NetworkTools.PingService;
+
 /**
  * Created by michael on 12.07.2017.
  */
