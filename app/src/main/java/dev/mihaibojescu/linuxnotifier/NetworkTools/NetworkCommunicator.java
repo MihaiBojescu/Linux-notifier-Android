@@ -26,6 +26,7 @@ public class NetworkCommunicator extends Thread
     private BlockingQueue<Integer> ports;
     private BlockingQueue<JSONObject> messages;
     private BlockingQueue<JSONObject> receivedMessages;
+    private BlockingQueue<Boolean> needsResponse;
     private Socket socket;
     private BufferedReader streamIn;
     private BufferedWriter streamOut;
@@ -38,6 +39,7 @@ public class NetworkCommunicator extends Thread
         this.ports = new LinkedBlockingQueue<>();
         this.messages = new LinkedBlockingQueue<>();
         this.receivedMessages = new LinkedBlockingQueue<>();
+        this.needsResponse = new LinkedBlockingQueue<>();
         this.interval = 200;
     }
 
@@ -58,6 +60,7 @@ public class NetworkCommunicator extends Thread
             {
                 String host = this.hosts.take();
                 Integer port = this.ports.take();
+                Boolean responseRequest = this.needsResponse.take();
                 JSONObject currentMessage = this.messages.take();
                 JSONObject receivedMessage = null;
 
@@ -68,18 +71,19 @@ public class NetworkCommunicator extends Thread
 
                 this.sendMessage(currentMessage.toString());
 
-                try
+                if(responseRequest)
                 {
-                    if ((receivedMessage = new JSONObject(this.receiveMessage())) != null)
+                    try
+                    {
+                        if ((receivedMessage = new JSONObject(this.receiveMessage())) != null)
+                            this.receivedMessages.add(receivedMessage);
+                    } catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        Log.e("Error", "No message received from host");
                         this.receivedMessages.add(receivedMessage);
+                    }
                 }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                    Log.e("Error", "No message received from host");
-                    this.receivedMessages.add(receivedMessage);
-                }
-
                 this.disconnect();
             }
             catch (Exception e)
@@ -155,10 +159,11 @@ public class NetworkCommunicator extends Thread
         }
     }
 
-    public void pushMessageToIP(String IP, Integer port, JSONObject message)
+    public void pushMessageToIP(String IP, Integer port, JSONObject message, boolean needsResponse)
     {
         this.hosts.add(IP);
         this.ports.add(port);
+        this.needsResponse.add(needsResponse);
         this.messages.add(message);
     }
 

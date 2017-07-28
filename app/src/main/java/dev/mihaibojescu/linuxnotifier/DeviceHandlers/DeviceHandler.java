@@ -1,6 +1,7 @@
 package dev.mihaibojescu.linuxnotifier.DeviceHandlers;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -74,10 +75,17 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
                     if (isDeviceValid(device))
                     {
                         publishProgress(device);
-                        if (device.getStatus() == Device.statuses.NEW)
-                            requestInfo(device);
-                        else if (device.getStatus() == Device.statuses.WAITING_AUTH)
-                            authentificateDevice(device);
+                        switch(device.getStatus())
+                        {
+                            case NEW:
+                                Log.d("device info", device.getName() + " " + device.getStatus() + " " + device.getAddress() + " " + device.getMac() + ".");
+                                requestInfo(device);
+                                Log.d("device info after", device.getName() + " " + device.getStatus() + " " + device.getAddress() + " " + device.getMac() + ".");
+                                break;
+                            case WAITING_AUTH:
+                                authentificateDevice(device);
+                                break;
+                        }
                     }
                 }
                 else
@@ -141,7 +149,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
             e.printStackTrace();
         }
 
-        communicator.pushMessageToIP(device.getAddress(), 5005, request);
+        communicator.pushMessageToIP(device.getAddress(), 5005, request, true);
         JSONObject response = communicator.getResponse();
 
         if (response != null)
@@ -175,7 +183,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
             e.printStackTrace();
         }
 
-        communicator.pushMessageToIP(device.getAddress(), 5005, request);
+        communicator.pushMessageToIP(device.getAddress(), 5005, request, true);
 
         lastInterval = communicator.getInterval();
         communicator.setInterval(10000);
@@ -195,6 +203,15 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
             {
                 e.printStackTrace();
             }
+    }
+
+    public void dispatchMessageToAllDevices(JSONObject message)
+    {
+        NetworkCommunicator communicator = NetworkCommunicator.getInstance();
+
+        for(Device currentDevice: devices)
+            if(currentDevice.getStatus() == Device.statuses.CONNECTED)
+                communicator.pushMessageToIP(currentDevice.getAddress(), 5005, message, false);
     }
 
     public void getDevicesFromFile()
@@ -289,6 +306,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         ioClass.openFile("devices.json");
         ioClass.writeToFile(new JSONObject());
         this.devices.clear();
+        this.checkList.clear();
         this.publishProgress(null);
     }
 

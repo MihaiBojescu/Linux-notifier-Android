@@ -1,6 +1,8 @@
 package dev.mihaibojescu.linuxnotifier.NotificationHandlers;
 
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
@@ -19,12 +21,9 @@ import dev.mihaibojescu.linuxnotifier.MainActivity;
 public class NotificationReceiver extends NotificationListenerService
 {
 
-    private MainActivity main;
-
-
-    public NotificationReceiver(MainActivity main)
+    public enum actions
     {
-        this.main = main;
+        NOTIFICATION_RECEIVED
     }
 
     @Override
@@ -35,21 +34,29 @@ public class NotificationReceiver extends NotificationListenerService
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn)
     {
-    }
-
-    @Override
-    public void onNotificationPosted (StatusBarNotification sbn, NotificationListenerService.RankingMap rankingMap)
-    {
-        Intent intent = new Intent("dev.mihaibojescu.linuxnotifier");
-        intent.putExtra("notification_event", "onNotificationPosted :" + sbn.getPackageName() + "\n");
-        sendBroadcast(intent);
+        super.onNotificationRemoved(sbn);
     }
 
     @Override
     public void onNotificationPosted (StatusBarNotification sbn)
     {
         Intent intent = new Intent("dev.mihaibojescu.linuxnotifier");
-        intent.putExtra("notification_event", "onNotificationPosted :" + sbn.getPackageName() + "\n");
+        intent.setAction(actions.NOTIFICATION_RECEIVED.toString());
+
+        try
+        {
+            PackageManager packageManager = getApplicationContext().getPackageManager();
+            ApplicationInfo applicationInfo;
+            applicationInfo = packageManager.getApplicationInfo(sbn.getPackageName(), 0);
+
+            intent.putExtra("appName", packageManager.getApplicationLabel(applicationInfo));
+        }
+        catch(PackageManager.NameNotFoundException e)
+        {
+            intent.putExtra("appName", "unknown application");
+        }
+
+        intent.putExtra("data", sbn.getNotification().extras.toString());
         sendBroadcast(intent);
     }
 }

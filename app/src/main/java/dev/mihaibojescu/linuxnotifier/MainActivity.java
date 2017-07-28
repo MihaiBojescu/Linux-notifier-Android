@@ -77,15 +77,16 @@ public class MainActivity extends AppCompatActivity
         this.deviceHandler = DeviceHandler.getInstance(this);
         this.deviceHandler.execute();
         this.deviceHandler.getDevicesFromFile();
-        if (deviceHandler.getDeviceList().size() == 0)
-            deviceHandler.scanSubnet();
+        //if (deviceHandler.getDeviceList().size() == 0)
+        //    deviceHandler.scanSubnet();
 
         this.notificationBroadcastReceiver = new NotificationBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter("dev.mihaibojescu.linuxnotifier");
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("dev.mihaibojescu.linuxnotifier");
         registerReceiver(notificationBroadcastReceiver, intentFilter);
 
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
