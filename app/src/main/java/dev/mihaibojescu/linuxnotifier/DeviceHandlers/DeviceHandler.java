@@ -120,7 +120,6 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
     private void addDevice(Device device)
     {
         device.setPin(CryptHandler.getInstance().createPin(4));
-        device.setStatus(Device.statuses.NEW);
         this.devices.add(device);
         main.getAdapter().notifyDataSetChanged();
     }
@@ -138,16 +137,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
     private void requestInfo(Device device)
     {
         NetworkCommunicator communicator = NetworkCommunicator.getInstance();
-        JSONObject request = new JSONObject();
-
-        try
-        {
-            request.put("reason", "request info");
-        }
-        catch (JSONException e)
-        {
-            e.printStackTrace();
-        }
+        JSONObject request = Request.createRequest(Request.reasons.REQUEST_INFO);
 
         communicator.pushMessageToIP(device.getAddress(), 5005, request, true);
         JSONObject response = communicator.getResponse();
@@ -168,12 +158,11 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
     private void authentificateDevice(Device device)
     {
         NetworkCommunicator communicator = NetworkCommunicator.getInstance();
-        JSONObject request = new JSONObject();
+        JSONObject request = Request.createRequest(Request.reasons.AUTHENTIFICATE);
         int lastInterval;
 
         try
         {
-            request.put("reason", "auth");
             request.put("name", NetworkTools.getInstance().getMyHostname());
             request.put("address", NetworkTools.getInstance().getLocalIpAddress());
             request.put("pin", device.getPin());
@@ -214,7 +203,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
                 communicator.pushMessageToIP(currentDevice.getAddress(), 5005, message, false);
     }
 
-    public void getDevicesFromFile()
+    public void getAndCheckDevicesFromFile()
     {
         IOClass ioClass = IOClass.getInstance();
         ioClass.openFile("devices.json");
@@ -241,7 +230,11 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
                     Device newDevice = new Device(currentName, currentAddress,
                             currentMac, currentPin.getBytes());
 
-                    addDeviceToCheckList(newDevice);
+                    if(isDeviceValid(newDevice))
+                    {
+                        newDevice.setStatus(Device.statuses.CONNECTED);
+                        addPriorityDeviceToCheckList(newDevice);
+                    }
                 }
                 catch (JSONException e)
                 {
@@ -317,7 +310,11 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         PingService.getInstance().clearPingList();
 
         for (int i = 2; i < 254; i++)
-            this.addDeviceToCheckList(new Device("", address + String.valueOf(i), "", ""));
+        {
+            Device device = new Device();
+            device.setAddress(address + String.valueOf(i));
+            this.addDeviceToCheckList(device);
+        }
     }
 
     public Device getHostByIndex(int index)

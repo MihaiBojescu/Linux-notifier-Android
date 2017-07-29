@@ -23,7 +23,7 @@ public class Device
 
     public Device()
     {
-
+        this.status = statuses.NEW;
     }
 
     public Device(String name, String address, String mac, byte[] pin)

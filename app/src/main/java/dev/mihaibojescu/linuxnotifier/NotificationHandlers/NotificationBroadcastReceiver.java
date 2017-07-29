@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import dev.mihaibojescu.linuxnotifier.DeviceHandlers.DeviceHandler;
+import dev.mihaibojescu.linuxnotifier.DeviceHandlers.Request;
 
 /**
  * Created by michael on 7/27/17.
@@ -15,14 +16,15 @@ import dev.mihaibojescu.linuxnotifier.DeviceHandlers.DeviceHandler;
 
 public class NotificationBroadcastReceiver extends BroadcastReceiver
 {
+
     @Override
     public void onReceive(Context context, Intent intent)
     {
         try
         {
-            JSONObject message = new JSONObject();
-            message.put("request", "notification");
+            JSONObject message = Request.createRequest(Request.reasons.NOTIFICATION);
             message.put("appName", intent.getStringExtra("appName"));
+            message.put("title", intent.getStringExtra("title"));
             message.put("data", intent.getStringExtra("data"));
 
             DeviceHandler.getInstance().dispatchMessageToAllDevices(message);
@@ -31,6 +33,5 @@ public class NotificationBroadcastReceiver extends BroadcastReceiver
         {
             e.printStackTrace();
         }
-
     }
 }

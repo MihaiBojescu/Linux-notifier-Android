@@ -2,7 +2,8 @@
     <string name="app_name">Linux notifier</string>
     <string name="service_name">Linux notifier</string>
     <string name="refresh">Refresh</string>
-    <string name="renewkeys">Renew keys</string>
+    <string name="renew_keys">Renew keys</string>
     <string name="notice">Note: Start the client on your GNU/Linux computer before performing a refresh.</string>
-    <string name="cleancache">Clean device cache</string>
+    <string name="clean_cache">Clean device cache</string>
+    <string name="intent_name">dev.mihaibojescu.linuxnotifier</string>
 </resources>

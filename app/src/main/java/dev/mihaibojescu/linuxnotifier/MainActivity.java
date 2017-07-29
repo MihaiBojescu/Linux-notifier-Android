@@ -1,5 +1,6 @@
 package dev.mihaibojescu.linuxnotifier;
 
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
@@ -76,14 +77,13 @@ public class MainActivity extends AppCompatActivity
 
         this.deviceHandler = DeviceHandler.getInstance(this);
         this.deviceHandler.execute();
-        this.deviceHandler.getDevicesFromFile();
+        this.deviceHandler.getAndCheckDevicesFromFile();
         //if (deviceHandler.getDeviceList().size() == 0)
         //    deviceHandler.scanSubnet();
 
-        this.notificationBroadcastReceiver = new NotificationBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("dev.mihaibojescu.linuxnotifier");
-        registerReceiver(notificationBroadcastReceiver, intentFilter);
+        Intent intent = new Intent("notificationBroadcast");
+        intent.setClass(this, NotificationBroadcastReceiver.class);
+        sendBroadcast(intent);
 
 
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
@@ -187,7 +187,6 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onClick(View view, int position)
         {
-            Log.d("Info: ", deviceHandler.getHostByIndex(position).getStatus().toString());
             deviceHandler.addPriorityDeviceToCheckList(deviceHandler.getHostByIndex(position));
         }
 

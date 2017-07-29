@@ -8,10 +8,7 @@ import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
-import android.widget.TextView;
-
-import dev.mihaibojescu.linuxnotifier.MainActivity;
+import dev.mihaibojescu.linuxnotifier.R;
 
 /**
  * Created by michael on 05.05.2017.
@@ -40,7 +37,8 @@ public class NotificationReceiver extends NotificationListenerService
     @Override
     public void onNotificationPosted (StatusBarNotification sbn)
     {
-        Intent intent = new Intent("dev.mihaibojescu.linuxnotifier");
+        Intent intent = new Intent(String.valueOf(R.string.app_name));
+        intent.setClass(this, NotificationBroadcastReceiver.class);
         intent.setAction(actions.NOTIFICATION_RECEIVED.toString());
 
         try
@@ -56,7 +54,8 @@ public class NotificationReceiver extends NotificationListenerService
             intent.putExtra("appName", "unknown application");
         }
 
-        intent.putExtra("data", sbn.getNotification().extras.toString());
+        intent.putExtra("title", sbn.getNotification().extras.getString("android.title"));
+        intent.putExtra("data", sbn.getNotification().extras.getString("android.text"));
         sendBroadcast(intent);
     }
 }
