@@ -111,17 +111,17 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
     @Override
     protected void onProgressUpdate(Device... device)
     {
-        if (device != null && device[0] != null)
+        if(device != null && device[0] != null)
             this.addDevice(device[0]);
-        else
-            main.getAdapter().notifyDataSetChanged();
+
+        main.getAdapter().notifyDataSetChanged();
     }
 
     private void addDevice(Device device)
     {
-        device.setPin(CryptHandler.getInstance().createPin(4));
         this.devices.add(device);
-        main.getAdapter().notifyDataSetChanged();
+        if(device.getStatus() == Device.statuses.NEW)
+            device.setPin(CryptHandler.getInstance().createPin(6));
     }
 
     public void addDeviceToCheckList(Device device)
@@ -185,6 +185,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
                 if (response.getString("response").equals("1"))
                 {
                     device.setStatus(Device.statuses.CONNECTED);
+                    publishProgress(null);
                     this.writeDevicesToFile();
                 }
             }
@@ -228,7 +229,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
                     String currentPin = pins.getString(i);
 
                     Device newDevice = new Device(currentName, currentAddress,
-                            currentMac, currentPin.getBytes());
+                            currentMac, currentPin);
 
                     if(isDeviceValid(newDevice))
                     {
@@ -298,9 +299,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         IOClass ioClass = IOClass.getInstance();
         ioClass.openFile("devices.json");
         ioClass.writeToFile(new JSONObject());
-        this.devices.clear();
         this.checkList.clear();
-        this.publishProgress(null);
     }
 
     public void scanSubnet()
@@ -309,7 +308,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         String address = myIP.substring(0, myIP.lastIndexOf('.')) + '.';
         PingService.getInstance().clearPingList();
 
-        for (int i = 2; i < 254; i++)
+        for (int i = 2; i < 255; i++)
         {
             Device device = new Device();
             device.setAddress(address + String.valueOf(i));

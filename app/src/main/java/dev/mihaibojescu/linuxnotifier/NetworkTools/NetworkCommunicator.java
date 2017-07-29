@@ -109,6 +109,7 @@ public class NetworkCommunicator extends Thread
         }
         catch (IOException e)
         {
+            e.printStackTrace();
         }
     }
 
@@ -125,6 +126,7 @@ public class NetworkCommunicator extends Thread
         }
         catch (IOException e)
         {
+            e.printStackTrace();
         }
     }
 
@@ -156,6 +158,7 @@ public class NetworkCommunicator extends Thread
         }
         catch (IOException e)
         {
+            e.printStackTrace();
             return null;
         }
     }
@@ -174,7 +177,9 @@ public class NetworkCommunicator extends Thread
         {
             return this.receivedMessages.take();
         }
-        catch (Exception e) {
+        catch (Exception e)
+        {
+            e.printStackTrace();
             return null;
         }
     }
@@ -191,6 +196,24 @@ public class NetworkCommunicator extends Thread
             catch (SocketException e)
             {
             }
+    }
+
+    public void clearQueues()
+    {
+        this.hosts.clear();
+        this.needsResponse.clear();
+        this.messages.clear();
+        this.ports.clear();
+        this.receivedMessages.clear();
+    }
+
+    public void clearAll()
+    {
+        clearQueues();
+
+        if (this.socket != null)
+            if(!this.socket.isClosed() || this.socket.isConnected())
+                disconnect();
     }
 
     public int getInterval()

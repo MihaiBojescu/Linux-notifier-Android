@@ -10,7 +10,7 @@ public class Device
     private String name;
     private String address;
     private String mac;
-    private byte[] pin;
+    private String pin;
     private statuses status;
 
     public enum statuses
@@ -26,21 +26,12 @@ public class Device
         this.status = statuses.NEW;
     }
 
-    public Device(String name, String address, String mac, byte[] pin)
-    {
-        this.name = name;
-        this.address = address;
-        this.mac = mac;
-        this.pin = pin;
-        this.status = statuses.NEW;
-    }
-
     public Device(String name, String address, String mac, String pin)
     {
         this.name = name;
         this.address = address;
         this.mac = mac;
-        this.pin = pin.getBytes();
+        this.pin = pin;
         this.status = statuses.NEW;
     }
 
@@ -59,7 +50,7 @@ public class Device
         return mac;
     }
 
-    public byte[] getPin()
+    public String getPin()
     {
         return pin;
     }
@@ -84,7 +75,7 @@ public class Device
         this.mac = mac;
     }
 
-    public void setPin(byte[] pin)
+    public void setPin(String pin)
     {
         this.pin = pin;
     }

@@ -1,5 +1,7 @@
 package dev.mihaibojescu.linuxnotifier.NetworkTools;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -19,8 +21,15 @@ public class PingService extends Thread {
     private Integer interval;
     private BlockingQueue<String> pingQueue;
     private BlockingQueue<Boolean> responses;
-    private String myIp;
+    private String myIP;
 
+    private PingService()
+    {
+        this.interval = 200;
+        this.pingQueue = new LinkedBlockingQueue<>();
+        this.responses = new LinkedBlockingQueue<>();
+        this.myIP = NetworkTools.getInstance().getLocalIpAddress();
+    }
 
     public static PingService getInstance()
     {
@@ -28,23 +37,6 @@ public class PingService extends Thread {
             service = new PingService();
 
         return service;
-    }
-
-    public static PingService getInstance(String myIP, MainActivity main)
-    {
-        if (service == null)
-            service = new PingService();
-
-        service.setParams(myIP, main);
-        return service;
-    }
-
-    public void setParams(String myIP, MainActivity main)
-    {
-        this.interval = 200;
-        this.pingQueue = new LinkedBlockingQueue<>();
-        this.responses = new LinkedBlockingQueue<>();
-        this.myIp = myIP;
     }
 
     @Override
@@ -63,7 +55,7 @@ public class PingService extends Thread {
                 e.printStackTrace();
             }
 
-            if (address != myIp && isPortUp(address))
+            if (address != myIP && isPortUp(address))
                 responses.add(true);
             else
                 responses.add(false);

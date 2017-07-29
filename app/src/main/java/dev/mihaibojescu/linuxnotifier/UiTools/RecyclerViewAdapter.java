@@ -22,10 +22,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public static class ViewHolder extends RecyclerView.ViewHolder{
         public TextView deviceName;
         public TextView deviceMac;
+        public TextView connectionStatus;
         public ViewHolder(View view) {
             super(view);
             deviceName = (TextView) view.findViewById(R.id.devicename);
             deviceMac = (TextView) view.findViewById(R.id.devicemac);
+            connectionStatus = (TextView) view.findViewById(R.id.connectionStatus);
         }
     }
 
@@ -47,11 +49,19 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Device device = dataset.get(position);
         holder.deviceName.setText(device.getName());
         holder.deviceMac.setText(device.getMac());
+        if(device.getStatus() == Device.statuses.CONNECTED)
+            holder.connectionStatus.setVisibility(View.VISIBLE);
     }
 
     @Override
     public int getItemCount()
     {
         return dataset.size();
+    }
+
+    public void clear()
+    {
+        this.dataset.clear();
+        notifyDataSetChanged();
     }
 }

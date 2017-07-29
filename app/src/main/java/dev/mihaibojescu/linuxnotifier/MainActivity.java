@@ -1,8 +1,7 @@
 package dev.mihaibojescu.linuxnotifier;
 
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
@@ -10,7 +9,6 @@ import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -22,9 +20,6 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
-
-import java.util.LinkedList;
-import java.util.Queue;
 
 import dev.mihaibojescu.linuxnotifier.Crypto.CryptHandler;
 import dev.mihaibojescu.linuxnotifier.IO.IOClass;
@@ -42,11 +37,9 @@ public class MainActivity extends AppCompatActivity
 
     private GoogleApiClient client;
     private PingService pingService;
-    private Queue<String> notifications;
     private NetworkCommunicator communicatorThread;
     private DeviceHandler deviceHandler;
     private RecyclerViewAdapter recyclerViewAdapter;
-    private String myIpAddress;
     private NotificationBroadcastReceiver notificationBroadcastReceiver;
 
     
@@ -58,16 +51,17 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
 
-        NetworkTools tools = NetworkTools.getInstance(this);
+        NetworkTools.getInstance(this);
         IOClass ioClass = IOClass.getInstance();
         ioClass.setContext(this.getApplicationContext());
 
-        this.myIpAddress = tools.getLocalIpAddress();
-        this.notifications = new LinkedList<>();
-        this.pingService = PingService.getInstance(myIpAddress, this);
-        this.pingService.start();
+        this.pingService = PingService.getInstance();
+        if(pingService.getState() == Thread.State.NEW)
+            this.pingService.start();
+
         this.communicatorThread = NetworkCommunicator.getInstance();
-        this.communicatorThread.start();
+        if(communicatorThread.getState() == Thread.State.NEW)
+            this.communicatorThread.start();
 
 
         SeekBar seekbar = ((SeekBar)findViewById(R.id.seekBar));
@@ -76,15 +70,11 @@ public class MainActivity extends AppCompatActivity
         seekbar.setOnSeekBarChangeListener(new SeekBarHandler());
 
         this.deviceHandler = DeviceHandler.getInstance(this);
-        this.deviceHandler.execute();
-        this.deviceHandler.getAndCheckDevicesFromFile();
-        //if (deviceHandler.getDeviceList().size() == 0)
-        //    deviceHandler.scanSubnet();
-
-        Intent intent = new Intent("notificationBroadcast");
-        intent.setClass(this, NotificationBroadcastReceiver.class);
-        sendBroadcast(intent);
-
+        if(this.deviceHandler.getStatus() == AsyncTask.Status.PENDING)
+        {
+            this.deviceHandler.execute();
+            this.deviceHandler.getAndCheckDevicesFromFile();
+        }
 
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
@@ -175,6 +165,7 @@ public class MainActivity extends AppCompatActivity
 
             case R.id.cleancache:
                 this.deviceHandler.cleanCache();
+                this.communicatorThread.clearAll();
                 return true;
 
             default:
@@ -193,7 +184,6 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onLongClick(View view, int position)
         {
-
         }
     }
 

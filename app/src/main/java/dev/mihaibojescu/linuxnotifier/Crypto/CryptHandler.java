@@ -7,6 +7,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.Random;
 
 /**
  * Created by michael on 08.07.2017.
@@ -18,6 +19,7 @@ public class CryptHandler
 {
 
     private static CryptHandler instance = null;
+    private static String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFHIJKLMNOPQRSTUVWXYZ0123456789";
     private KeyPairGenerator kpg;
     private KeyPair keys;
 
@@ -71,10 +73,13 @@ public class CryptHandler
         return keys.getPrivate().getEncoded().toString().getBytes();
     }
 
-    public byte[] createPin(int size)
+    public String createPin(int size)
     {
-        byte[] newPin = new byte[size];
-        new SecureRandom().nextBytes(newPin);
+        String newPin = "";
+        SecureRandom randomService = new SecureRandom();
+        for(int i = 0; i < size; i++)
+            newPin += alphabet.charAt(randomService.nextInt(alphabet.length()));
+
         return newPin;
     }
 }
