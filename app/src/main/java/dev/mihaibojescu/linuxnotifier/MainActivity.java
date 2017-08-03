@@ -1,9 +1,13 @@
 package dev.mihaibojescu.linuxnotifier;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -71,10 +75,9 @@ public class MainActivity extends AppCompatActivity
 
         this.deviceHandler = DeviceHandler.getInstance(this);
         if(this.deviceHandler.getStatus() == AsyncTask.Status.PENDING)
-        {
             this.deviceHandler.execute();
-            this.deviceHandler.getAndCheckDevicesFromFile();
-        }
+
+        checkAndUpdatePermissions();
 
         final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
@@ -171,6 +174,39 @@ public class MainActivity extends AppCompatActivity
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    this.deviceHandler.setEnableRead(true);
+                    this.deviceHandler.getAndCheckDevicesFromFile();
+                }
+                else
+                    this.deviceHandler.setEnableRead(false);
+                return;
+
+            case 2:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    this.deviceHandler.setEnableWrite(true);
+                else
+                    this.deviceHandler.setEnableWrite(false);
+                return;
+        }
+    }
+
+    public void checkAndUpdatePermissions()
+    {
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
     }
 
     private class ClickListenerExample implements ClickListener

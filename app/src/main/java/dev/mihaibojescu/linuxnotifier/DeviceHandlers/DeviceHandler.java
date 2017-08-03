@@ -30,12 +30,16 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
     private MainActivity main;
     private List<Device> devices;
     private BlockingDeque<Device> checkList;
+    private Boolean enableWrite;
+    private Boolean enableRead;
 
 
     private DeviceHandler()
     {
         this.devices = new ArrayList<>();
         this.checkList = new LinkedBlockingDeque<>();
+        this.enableWrite = false;
+        this.enableRead = false;
     }
 
     public static DeviceHandler getInstance()
@@ -70,7 +74,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
             {
                 device = this.checkList.takeLast();
 
-                if (!devices.contains(device))
+                if (!isDeviceOnTheList(device))
                 {
                     if (isDeviceValid(device))
                     {
@@ -200,12 +204,17 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         NetworkCommunicator communicator = NetworkCommunicator.getInstance();
 
         for(Device currentDevice: devices)
-            if(currentDevice.getStatus() == Device.statuses.CONNECTED)
-                communicator.pushMessageToIP(currentDevice.getAddress(), 5005, message, false);
+            if(isDeviceValid(currentDevice))
+                if(currentDevice.getStatus() == Device.statuses.CONNECTED)
+                    communicator.pushMessageToIP(currentDevice.getAddress(), 5005, message, false);
+            else
+                currentDevice.setStatus(Device.statuses.NEW);
     }
 
     public void getAndCheckDevicesFromFile()
     {
+        if (this.enableRead) return;
+
         IOClass ioClass = IOClass.getInstance();
         ioClass.openFile("devices.json");
         JSONObject result = ioClass.readFile();
@@ -251,6 +260,8 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
 
     public void writeDevicesToFile()
     {
+        if (this.enableWrite) return;
+
         IOClass ioClass = IOClass.getInstance();
         ioClass.openFile("devices.json");
         JSONObject output = new JSONObject();
@@ -316,9 +327,28 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         }
     }
 
+    public void setEnableRead(Boolean value)
+    {
+        this.enableRead = value;
+    }
+
+    public void setEnableWrite(Boolean value)
+    {
+        this.enableWrite = value;
+    }
+
     public Device getHostByIndex(int index)
     {
         return devices.get(index);
+    }
+
+    private Boolean isDeviceOnTheList(Device device)
+    {
+        for (Device currentDevice: this.devices)
+            if (currentDevice.getAddress().equals(device.getAddress()))
+                return true;
+
+        return false;
     }
 
     public List<Device> getDeviceList()
