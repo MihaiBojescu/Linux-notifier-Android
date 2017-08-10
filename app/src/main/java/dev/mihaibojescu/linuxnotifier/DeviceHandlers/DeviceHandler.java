@@ -30,16 +30,12 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
     private MainActivity main;
     private List<Device> devices;
     private BlockingDeque<Device> checkList;
-    private Boolean enableWrite;
-    private Boolean enableRead;
 
 
     private DeviceHandler()
     {
         this.devices = new ArrayList<>();
         this.checkList = new LinkedBlockingDeque<>();
-        this.enableWrite = false;
-        this.enableRead = false;
     }
 
     public static DeviceHandler getInstance()
@@ -213,13 +209,10 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
 
     public void getAndCheckDevicesFromFile()
     {
-        if (this.enableRead) return;
-
         IOClass ioClass = IOClass.getInstance();
-        ioClass.openFile("devices.json");
-        JSONObject result = ioClass.readFile();
+        JSONObject result = ioClass.readFile("devices.json");
 
-        if (result == null) return;
+        if (result.length() == 0) return;
 
         try
         {
@@ -260,10 +253,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
 
     public void writeDevicesToFile()
     {
-        if (this.enableWrite) return;
-
         IOClass ioClass = IOClass.getInstance();
-        ioClass.openFile("devices.json");
         JSONObject output = new JSONObject();
 
         try
@@ -286,7 +276,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
             output.put("mac", macs);
             output.put("pin", pins);
 
-            ioClass.writeToFile(output);
+            ioClass.writeToFile("devices.json", output);
         }
         catch (JSONException e)
         {
@@ -308,8 +298,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
     public void cleanCache()
     {
         IOClass ioClass = IOClass.getInstance();
-        ioClass.openFile("devices.json");
-        ioClass.writeToFile(new JSONObject());
+        ioClass.writeToFile("devices.json", new JSONObject());
         this.checkList.clear();
     }
 
@@ -325,16 +314,6 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
             device.setAddress(address + String.valueOf(i));
             this.addDeviceToCheckList(device);
         }
-    }
-
-    public void setEnableRead(Boolean value)
-    {
-        this.enableRead = value;
-    }
-
-    public void setEnableWrite(Boolean value)
-    {
-        this.enableWrite = value;
     }
 
     public Device getHostByIndex(int index)

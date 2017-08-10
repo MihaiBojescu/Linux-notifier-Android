@@ -6,4 +6,10 @@
     <string name="notice">Note: Start the client on your GNU/Linux computer before performing a refresh.</string>
     <string name="clean_cache">Clean device cache</string>
     <string name="intent_name">dev.mihaibojescu.linuxnotifier</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="accept">Accept</string>
+    <string name="deny">Deny</string>
+    <string name="enable_notification_listener_title">Enable Notification listener service</string>
+    <string name="enable_notification_listener">In order to use this application properly, you need to enable the Notification listener service provided for this application.</string>
 </resources>

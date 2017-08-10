@@ -2,6 +2,7 @@ package dev.mihaibojescu.linuxnotifier.IO;
 
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,9 +12,14 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import dev.mihaibojescu.linuxnotifier.R;
 
 /**
  * Created by michael on 11.07.2017.
@@ -48,71 +54,45 @@ public class IOClass
         this.context = context;
     }
 
-    public void openFile(String filename)
+    public void writeToFile(String fileName, JSONObject input)
     {
-        folder = new File(Environment.getExternalStorageDirectory() + "/" + context.getPackageName());
-
-        if (!folder.exists())
-            folder.mkdirs();
-
-        currentFile = new File(folder, "/" + filename);
-
-        if (!currentFile.exists())
-            try
-            {
-                currentFile.createNewFile();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-    }
-
-    public void writeToFile(JSONObject input)
-    {
-        BufferedWriter writer;
+        FileOutputStream fileOutputStream;
 
         try
         {
-            writer = new BufferedWriter(new FileWriter(currentFile, false));
-            writer.write(input.toString());
-            writer.close();
+            fileOutputStream = context.openFileOutput("devices.json", Context.MODE_PRIVATE);
+            fileOutputStream.write(input.toString().getBytes());
+            fileOutputStream.close();
         }
-        catch (IOException io)
+        catch (IOException e)
         {
-            io.printStackTrace();;
+            e.printStackTrace();
         }
     }
 
-    public JSONObject readFile()
+    public JSONObject readFile(String fileName)
     {
         JSONObject result;
-        BufferedReader reader;
-        StringBuilder builder;
-        String line;
+        FileInputStream fileInputStream;
+        StringBuilder stringBuilder;
+        byte[] buffer;
 
         try
         {
-            reader = new BufferedReader(new FileReader(currentFile));
-            builder = new StringBuilder();
+            fileInputStream = context.openFileInput("devices.json");
+            stringBuilder = new StringBuilder();
+            buffer = new byte[1024];
 
-            while ((line = reader.readLine()) != null)
-                builder.append(line);
+            while (fileInputStream.read(buffer) != -1)
+                stringBuilder.append(new String(buffer));
 
-            reader.close();
-            result = new JSONObject(builder.toString());
+            result = new JSONObject(stringBuilder.toString());
+            return result;
         }
-        catch (IOException io)
+        catch (JSONException | IOException e)
         {
-            io.printStackTrace();
-            return null;
+            e.printStackTrace();
         }
-        catch (JSONException json)
-        {
-            json.printStackTrace();
-            return null;
-        }
-
-        return result;
+        return new JSONObject();
     }
 }

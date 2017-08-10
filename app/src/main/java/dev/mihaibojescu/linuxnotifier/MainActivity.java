@@ -1,13 +1,18 @@
 package dev.mihaibojescu.linuxnotifier;
 
 import android.Manifest;
+import android.content.ComponentName;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -26,6 +31,7 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import dev.mihaibojescu.linuxnotifier.Crypto.CryptHandler;
+import dev.mihaibojescu.linuxnotifier.DeviceHandlers.Device;
 import dev.mihaibojescu.linuxnotifier.IO.IOClass;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkCommunicator;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkTools;
@@ -61,7 +67,7 @@ public class MainActivity extends AppCompatActivity
 
         this.pingService = PingService.getInstance();
         if(pingService.getState() == Thread.State.NEW)
-            this.pingService.start();
+            this.pingService.start();;
 
         this.communicatorThread = NetworkCommunicator.getInstance();
         if(communicatorThread.getState() == Thread.State.NEW)
@@ -75,7 +81,10 @@ public class MainActivity extends AppCompatActivity
 
         this.deviceHandler = DeviceHandler.getInstance(this);
         if(this.deviceHandler.getStatus() == AsyncTask.Status.PENDING)
+        {
+            this.deviceHandler.getAndCheckDevicesFromFile();
             this.deviceHandler.execute();
+        }
 
         checkAndUpdatePermissions();
 
@@ -176,37 +185,51 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
-    {
-        switch (requestCode)
-        {
-            case 1:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                {
-                    this.deviceHandler.setEnableRead(true);
-                    this.deviceHandler.getAndCheckDevicesFromFile();
-                }
-                else
-                    this.deviceHandler.setEnableRead(false);
-                return;
-
-            case 2:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    this.deviceHandler.setEnableWrite(true);
-                else
-                    this.deviceHandler.setEnableWrite(false);
-                return;
-        }
-    }
-
     public void checkAndUpdatePermissions()
     {
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+        if (!isNotificationListenerEnabled())
+            buildAndShowNLSdialog();
+    }
 
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+    private Boolean isNotificationListenerEnabled()
+    {
+        String listenerString = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
+
+        if (listenerString != null && !listenerString.equals(""))
+        {
+            String[] listeners = listenerString.split(":");
+            for (String listener: listeners)
+            {
+                ComponentName componentName = ComponentName.unflattenFromString(listener);
+                if (componentName != null)
+                    if (componentName.getPackageName().equals(getPackageName()))
+                        return true;
+            }
+        }
+        return false;
+    }
+
+    private void buildAndShowNLSdialog()
+    {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(R.string.enable_notification_listener_title);
+        dialog.setMessage(R.string.enable_notification_listener);
+        dialog.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+            }
+        });
+        dialog.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+            }
+        });
+        dialog.create().show();
     }
 
     private class ClickListenerExample implements ClickListener

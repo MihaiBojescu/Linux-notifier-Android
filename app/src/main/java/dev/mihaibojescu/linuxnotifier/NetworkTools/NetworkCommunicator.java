@@ -76,7 +76,7 @@ public class NetworkCommunicator extends Thread
                 {
                     try
                     {
-                        if ((receivedMessage = new JSONObject(this.receiveMessage())) != null)
+                        if ((receivedMessage = new JSONObject(this.receiveMessage())).length() != 0)
                             this.receivedMessages.add(receivedMessage);
                     } catch (Exception e)
                     {
@@ -147,14 +147,13 @@ public class NetworkCommunicator extends Thread
     {
         try
         {
-            String result = "";
-            int charactersRead;
+            StringBuilder stringBuilder = new StringBuilder();
             char[] buffer = new char[1024];
 
-            while ((charactersRead = streamIn.read(buffer)) != -1)
-                result += new String(buffer).substring(0, charactersRead);
+            while (streamIn.read(buffer) != -1)
+                stringBuilder.append(buffer);
 
-            return result;
+            return stringBuilder.toString();
         }
         catch (IOException e)
         {
