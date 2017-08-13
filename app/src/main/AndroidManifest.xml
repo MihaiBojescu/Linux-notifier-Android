@@ -44,6 +44,7 @@
                 <action android:name="@string/intent_name"/>
             </intent-filter>
         </receiver>
+
     </application>
 
 </manifest>

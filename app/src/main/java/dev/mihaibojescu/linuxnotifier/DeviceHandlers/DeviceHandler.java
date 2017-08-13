@@ -1,7 +1,7 @@
 package dev.mihaibojescu.linuxnotifier.DeviceHandlers;
 
-import android.os.AsyncTask;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,30 +12,35 @@ import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import dev.mihaibojescu.linuxnotifier.Crypto.CryptHandler;
 import dev.mihaibojescu.linuxnotifier.IO.IOClass;
 import dev.mihaibojescu.linuxnotifier.MainActivity;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkCommunicator;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkTools;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.PingService;
+import dev.mihaibojescu.linuxnotifier.Runnables.AddDeviceUIHandler;
+import dev.mihaibojescu.linuxnotifier.Runnables.AuthUIRunnable;
+import dev.mihaibojescu.linuxnotifier.Runnables.ClearUIRunnable;
+import dev.mihaibojescu.linuxnotifier.Runnables.UpdateUIRunnable;
 
 /**
  * Created by michael on 12.07.2017.
  */
 
-public class DeviceHandler extends AsyncTask<Void, Device, Void>
+public class DeviceHandler extends Thread
 {
 
     private static DeviceHandler instance = null;
     private MainActivity main;
     private List<Device> devices;
     private BlockingDeque<Device> checkList;
+    private Handler UIHandler;
 
 
     private DeviceHandler()
     {
         this.devices = new ArrayList<>();
         this.checkList = new LinkedBlockingDeque<>();
+        this.UIHandler = new Handler(Looper.getMainLooper());
     }
 
     public static DeviceHandler getInstance()
@@ -61,7 +66,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
     }
 
     @Override
-    protected Void doInBackground(Void... params)
+    public void run()
     {
         while (true)
         {
@@ -74,13 +79,11 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
                 {
                     if (isDeviceValid(device))
                     {
-                        publishProgress(device);
-                        switch(device.getStatus())
+                        addDevice(device);
+                        switch (device.getStatus())
                         {
                             case NEW:
-                                Log.d("device info", device.getName() + " " + device.getStatus() + " " + device.getAddress() + " " + device.getMac() + ".");
                                 requestInfo(device);
-                                Log.d("device info after", device.getName() + " " + device.getStatus() + " " + device.getAddress() + " " + device.getMac() + ".");
                                 break;
                             case WAITING_AUTH:
                                 authentificateDevice(device);
@@ -90,7 +93,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
                 }
                 else
                 {
-                    switch(device.getStatus())
+                    switch (device.getStatus())
                     {
                         case NEW:
                             requestInfo(device);
@@ -108,20 +111,14 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         }
     }
 
-    @Override
-    protected void onProgressUpdate(Device... device)
+    public void updateUI()
     {
-        if(device != null && device[0] != null)
-            this.addDevice(device[0]);
-
-        main.getAdapter().notifyDataSetChanged();
+        UIHandler.post(new UpdateUIRunnable(main));
     }
 
-    private void addDevice(Device device)
+    private void clearUI()
     {
-        this.devices.add(device);
-        if(device.getStatus() == Device.statuses.NEW)
-            device.setPin(CryptHandler.getInstance().createPin(6));
+        UIHandler.post(new ClearUIRunnable(devices, main));
     }
 
     public void addDeviceToCheckList(Device device)
@@ -148,6 +145,7 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
                 device.setName(response.getString("name"));
                 device.setMac(response.getString("mac"));
                 device.setStatus(Device.statuses.WAITING_AUTH);
+                this.updateUI();
             }
             catch (JSONException e)
             {
@@ -155,9 +153,9 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
             }
     }
 
-    private void authentificateDevice(Device device)
+    private void authentificateDevice(final Device device)
     {
-        NetworkCommunicator communicator = NetworkCommunicator.getInstance();
+        final NetworkCommunicator communicator = NetworkCommunicator.getInstance();
         JSONObject request = Request.createRequest(Request.reasons.AUTHENTIFICATE);
         int lastInterval;
 
@@ -166,6 +164,8 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
             request.put("name", NetworkTools.getInstance().getMyHostname());
             request.put("address", NetworkTools.getInstance().getLocalIpAddress());
             request.put("pin", device.getPin());
+
+            UIHandler.post(new AuthUIRunnable(device, main, communicator, this));
         }
         catch (JSONException e)
         {
@@ -174,37 +174,24 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
 
         communicator.pushMessageToIP(device.getAddress(), 5005, request, true);
 
-        lastInterval = communicator.getInterval();
-        communicator.setInterval(10000);
-        JSONObject response = communicator.getResponse();
-        communicator.setInterval(lastInterval);
+        try
+        {
+            lastInterval = communicator.getInterval();
+            communicator.setInterval(10000);
+            JSONObject response = communicator.getResponse();
+            communicator.setInterval(lastInterval);
 
-        if (response != null)
-            try
+            if(response != null && response.getString("response").equals("1"))
             {
-                if (response.getString("response").equals("1"))
-                {
-                    device.setStatus(Device.statuses.CONNECTED);
-                    publishProgress(null);
-                    this.writeDevicesToFile();
-                }
+                device.setStatus(Device.statuses.CONNECTED);
+                this.updateUI();
+                this.writeDevicesToFile();
             }
-            catch (JSONException e)
-            {
-                e.printStackTrace();
-            }
-    }
-
-    public void dispatchMessageToAllDevices(JSONObject message)
-    {
-        NetworkCommunicator communicator = NetworkCommunicator.getInstance();
-
-        for(Device currentDevice: devices)
-            if(isDeviceValid(currentDevice))
-                if(currentDevice.getStatus() == Device.statuses.CONNECTED)
-                    communicator.pushMessageToIP(currentDevice.getAddress(), 5005, message, false);
-            else
-                currentDevice.setStatus(Device.statuses.NEW);
+        }
+        catch(JSONException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     public void getAndCheckDevicesFromFile()
@@ -284,24 +271,6 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         }
     }
 
-    private Boolean isDeviceValid(Device device)
-    {
-        PingService service = PingService.getInstance();
-        service.addHost(device.getAddress());
-
-        if (service.wasLastValid())
-            return true;
-        else
-            return false;
-    }
-
-    public void cleanCache()
-    {
-        IOClass ioClass = IOClass.getInstance();
-        ioClass.writeToFile("devices.json", new JSONObject());
-        this.checkList.clear();
-    }
-
     public void scanSubnet()
     {
         String myIP = NetworkTools.getInstance().getLocalIpAddress();
@@ -316,9 +285,30 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         }
     }
 
-    public Device getHostByIndex(int index)
+    public void dispatchMessageToAllDevices(JSONObject message)
     {
-        return devices.get(index);
+        NetworkCommunicator communicator = NetworkCommunicator.getInstance();
+
+        for(Device currentDevice: devices)
+            if(isDeviceValid(currentDevice))
+                if(currentDevice.getStatus() == Device.statuses.CONNECTED)
+                    communicator.pushMessageToIP(currentDevice.getAddress(), 5005, message, false);
+                else
+                    currentDevice.setStatus(Device.statuses.NEW);
+    }
+
+    private void addDevice(Device device)
+    {
+        UIHandler.post(new AddDeviceUIHandler(devices, device));
+        UIHandler.post(new UpdateUIRunnable(main));
+    }
+
+    private Boolean isDeviceValid(Device device)
+    {
+        PingService service = PingService.getInstance();
+        service.addHost(device.getAddress());
+
+        return service.wasLastValid();
     }
 
     private Boolean isDeviceOnTheList(Device device)
@@ -330,8 +320,21 @@ public class DeviceHandler extends AsyncTask<Void, Device, Void>
         return false;
     }
 
+    public Device getHostByIndex(int index)
+    {
+        return devices.get(index);
+    }
+
     public List<Device> getDeviceList()
     {
         return devices;
+    }
+
+    public void clearCache()
+    {
+        IOClass ioClass = IOClass.getInstance();
+        ioClass.writeToFile("devices.json", new JSONObject());
+        this.checkList.clear();
+        this.clearUI();
     }
 }

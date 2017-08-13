@@ -1,5 +1,10 @@
 package dev.mihaibojescu.linuxnotifier.NetworkTools;
 
+import android.content.DialogInterface;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import java.io.IOException;
@@ -8,7 +13,9 @@ import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import dev.mihaibojescu.linuxnotifier.DeviceHandlers.Device;
 import dev.mihaibojescu.linuxnotifier.MainActivity;
+import dev.mihaibojescu.linuxnotifier.R;
 
 /**
  * Created by michael on 03.05.2017.

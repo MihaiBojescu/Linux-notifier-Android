@@ -14,6 +14,7 @@ public class Request
         public static final String REQUEST_INFO = "request information";
         public static final String AUTHENTIFICATE= "authentificate";
         public static final String NOTIFICATION = "notification";
+        public static final String DENY_AUTH = "deny authentification";
     }
 
     public static JSONObject createRequest(String reason)

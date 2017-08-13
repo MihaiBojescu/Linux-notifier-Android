@@ -1,17 +1,12 @@
 package dev.mihaibojescu.linuxnotifier;
 
-import android.Manifest;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,13 +26,12 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import dev.mihaibojescu.linuxnotifier.Crypto.CryptHandler;
-import dev.mihaibojescu.linuxnotifier.DeviceHandlers.Device;
+import dev.mihaibojescu.linuxnotifier.DeviceHandlers.DeviceHandler;
 import dev.mihaibojescu.linuxnotifier.IO.IOClass;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkCommunicator;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkTools;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.PingService;
 import dev.mihaibojescu.linuxnotifier.NotificationHandlers.NotificationBroadcastReceiver;
-import dev.mihaibojescu.linuxnotifier.DeviceHandlers.DeviceHandler;
 import dev.mihaibojescu.linuxnotifier.UiTools.ClickListener;
 import dev.mihaibojescu.linuxnotifier.UiTools.RecyclerViewAdapter;
 import dev.mihaibojescu.linuxnotifier.UiTools.RecyclerViewTouchHandler;
@@ -66,25 +60,15 @@ public class MainActivity extends AppCompatActivity
         ioClass.setContext(this.getApplicationContext());
 
         this.pingService = PingService.getInstance();
-        if(pingService.getState() == Thread.State.NEW)
-            this.pingService.start();;
-
         this.communicatorThread = NetworkCommunicator.getInstance();
-        if(communicatorThread.getState() == Thread.State.NEW)
-            this.communicatorThread.start();
+        this.deviceHandler = DeviceHandler.getInstance(this);
 
+        startThreads();
 
         SeekBar seekbar = ((SeekBar)findViewById(R.id.seekBar));
         pingService.updateInterval(seekbar.getProgress());
         communicatorThread.setInterval(seekbar.getProgress());
         seekbar.setOnSeekBarChangeListener(new SeekBarHandler());
-
-        this.deviceHandler = DeviceHandler.getInstance(this);
-        if(this.deviceHandler.getStatus() == AsyncTask.Status.PENDING)
-        {
-            this.deviceHandler.getAndCheckDevicesFromFile();
-            this.deviceHandler.execute();
-        }
 
         checkAndUpdatePermissions();
 
@@ -92,7 +76,7 @@ public class MainActivity extends AppCompatActivity
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.addOnItemTouchListener(new RecyclerViewTouchHandler(getApplicationContext(), recyclerView, new ClickListenerExample()));
+        recyclerView.addOnItemTouchListener(new RecyclerViewTouchHandler(getApplicationContext(), recyclerView, new ClickListenerHandler()));
         recyclerViewAdapter = new RecyclerViewAdapter(deviceHandler.getDeviceList());
         recyclerView.setAdapter(recyclerViewAdapter);
     }
@@ -176,7 +160,7 @@ public class MainActivity extends AppCompatActivity
                 return true;
 
             case R.id.cleancache:
-                this.deviceHandler.cleanCache();
+                this.deviceHandler.clearCache();
                 this.communicatorThread.clearAll();
                 return true;
 
@@ -185,7 +169,22 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void checkAndUpdatePermissions()
+    private void startThreads()
+    {
+        if(pingService.getState() == Thread.State.NEW)
+            this.pingService.start();
+
+        if(communicatorThread.getState() == Thread.State.NEW)
+            this.communicatorThread.start();
+
+        if(this.deviceHandler.getState() == Thread.State.NEW)
+        {
+            this.deviceHandler.getAndCheckDevicesFromFile();
+            this.deviceHandler.start();
+        }
+    }
+
+    private void checkAndUpdatePermissions()
     {
         if (!isNotificationListenerEnabled())
             buildAndShowNLSdialog();
@@ -232,21 +231,16 @@ public class MainActivity extends AppCompatActivity
         dialog.create().show();
     }
 
-    private class ClickListenerExample implements ClickListener
+    private class ClickListenerHandler implements ClickListener
     {
         @Override
         public void onClick(View view, int position)
         {
             deviceHandler.addPriorityDeviceToCheckList(deviceHandler.getHostByIndex(position));
         }
-
-        @Override
-        public void onLongClick(View view, int position)
-        {
-        }
     }
 
-    public class SeekBarHandler implements SeekBar.OnSeekBarChangeListener
+    private class SeekBarHandler implements SeekBar.OnSeekBarChangeListener
     {
         @Override
         public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser)
