@@ -14,6 +14,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import dev.mihaibojescu.linuxnotifier.IO.IOClass;
 import dev.mihaibojescu.linuxnotifier.MainActivity;
+import dev.mihaibojescu.linuxnotifier.NetworkTools.DiscoverySender;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkCommunicator;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkTools;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.PingService;
@@ -75,34 +76,18 @@ public class DeviceHandler extends Thread
             {
                 device = this.checkList.takeLast();
 
-                if (!isDeviceOnTheList(device))
-                {
-                    if (isDeviceValid(device))
-                    {
-                        addDevice(device);
-                        switch (device.getStatus())
-                        {
-                            case NEW:
-                                requestInfo(device);
-                                break;
-                            case WAITING_AUTH:
-                                authentificateDevice(device);
-                                break;
-                        }
-                    }
-                }
-                else
-                {
+                if (isDeviceValid(device))
                     switch (device.getStatus())
                     {
-                        case NEW:
-                            requestInfo(device);
-                            break;
+                        case DISCONNECTED:
+                            device.setStatus(Device.statuses.WAITING_AUTH);
                         case WAITING_AUTH:
                             authentificateDevice(device);
                             break;
                     }
-                }
+                else
+                    device.setStatus(Device.statuses.DISCONNECTED);
+
             }
             catch (InterruptedException e)
             {
@@ -121,36 +106,9 @@ public class DeviceHandler extends Thread
         UIHandler.post(new ClearUIRunnable(devices, main));
     }
 
-    public void addDeviceToCheckList(Device device)
-    {
-        this.checkList.addFirst(device);
-    }
-
     public void addPriorityDeviceToCheckList(Device device)
     {
         this.checkList.addLast(device);
-    }
-
-    private void requestInfo(Device device)
-    {
-        NetworkCommunicator communicator = NetworkCommunicator.getInstance();
-        JSONObject request = Request.createRequest(Request.reasons.REQUEST_INFO);
-
-        communicator.pushMessageToIP(device.getAddress(), 5005, request, true);
-        JSONObject response = communicator.getResponse();
-
-        if (response != null)
-            try
-            {
-                device.setName(response.getString("name"));
-                device.setMac(response.getString("mac"));
-                device.setStatus(Device.statuses.WAITING_AUTH);
-                this.updateUI();
-            }
-            catch (JSONException e)
-            {
-                e.printStackTrace();
-            }
     }
 
     private void authentificateDevice(final Device device)
@@ -273,16 +231,7 @@ public class DeviceHandler extends Thread
 
     public void scanSubnet()
     {
-        String myIP = NetworkTools.getInstance().getLocalIpAddress();
-        String address = myIP.substring(0, myIP.lastIndexOf('.')) + '.';
-        PingService.getInstance().clearPingList();
-
-        for (int i = 2; i < 255; i++)
-        {
-            Device device = new Device();
-            device.setAddress(address + String.valueOf(i));
-            this.addDeviceToCheckList(device);
-        }
+        DiscoverySender.getInstance().discover();
     }
 
     public void dispatchMessageToAllDevices(JSONObject message)
@@ -297,7 +246,7 @@ public class DeviceHandler extends Thread
                     currentDevice.setStatus(Device.statuses.NEW);
     }
 
-    private void addDevice(Device device)
+    public void addDevice(Device device)
     {
         UIHandler.post(new AddDeviceUIHandler(devices, device));
         UIHandler.post(new UpdateUIRunnable(main));
@@ -311,10 +260,19 @@ public class DeviceHandler extends Thread
         return service.wasLastValid();
     }
 
-    private Boolean isDeviceOnTheList(Device device)
+    public Boolean deviceExists(Device device)
     {
         for (Device currentDevice: this.devices)
-            if (currentDevice.getAddress().equals(device.getAddress()))
+            if (currentDevice.getMac().equals(device.getMac()))
+                return true;
+
+        return false;
+    }
+
+    public Boolean deviceExists(String mac)
+    {
+        for (Device currentDevice: this.devices)
+            if (currentDevice.getMac().equals(mac))
                 return true;
 
         return false;

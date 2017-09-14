@@ -28,6 +28,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import dev.mihaibojescu.linuxnotifier.Crypto.CryptHandler;
 import dev.mihaibojescu.linuxnotifier.DeviceHandlers.DeviceHandler;
 import dev.mihaibojescu.linuxnotifier.IO.IOClass;
+import dev.mihaibojescu.linuxnotifier.NetworkTools.DiscoveryReceiver;
+import dev.mihaibojescu.linuxnotifier.NetworkTools.DiscoverySender;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkCommunicator;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.NetworkTools;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.PingService;
@@ -45,6 +47,8 @@ public class MainActivity extends AppCompatActivity
     private DeviceHandler deviceHandler;
     private RecyclerViewAdapter recyclerViewAdapter;
     private NotificationBroadcastReceiver notificationBroadcastReceiver;
+    private DiscoveryReceiver receiver;
+    private DiscoverySender sender;
 
     
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -62,6 +66,8 @@ public class MainActivity extends AppCompatActivity
         this.pingService = PingService.getInstance();
         this.communicatorThread = NetworkCommunicator.getInstance();
         this.deviceHandler = DeviceHandler.getInstance(this);
+        this.sender = DiscoverySender.getInstance();
+        this.receiver = DiscoveryReceiver.getInstance();
 
         startThreads();
 
@@ -171,17 +177,24 @@ public class MainActivity extends AppCompatActivity
 
     private void startThreads()
     {
-        if(pingService.getState() == Thread.State.NEW)
+        if (pingService.getState() == Thread.State.NEW)
             this.pingService.start();
 
-        if(communicatorThread.getState() == Thread.State.NEW)
+        if (communicatorThread.getState() == Thread.State.NEW)
             this.communicatorThread.start();
 
-        if(this.deviceHandler.getState() == Thread.State.NEW)
+        if (this.deviceHandler.getState() == Thread.State.NEW)
         {
             this.deviceHandler.getAndCheckDevicesFromFile();
             this.deviceHandler.start();
         }
+
+        if(this.sender.getState() == Thread.State.NEW)
+            this.sender.start();
+
+        if(this.receiver.getState() == Thread.State.NEW)
+            this.receiver.start();
+
     }
 
     private void checkAndUpdatePermissions()

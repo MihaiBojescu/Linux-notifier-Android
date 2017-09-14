@@ -17,7 +17,8 @@ public class Device
     {
         NEW,
         WAITING_AUTH,
-        CONNECTED
+        CONNECTED,
+        DISCONNECTED
     };
 
 

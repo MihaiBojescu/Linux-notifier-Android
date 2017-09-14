@@ -27,6 +27,9 @@ public class AddDeviceUIHandler implements Runnable
     {
         devices.add(device);
         if(device.getStatus() == Device.statuses.NEW)
+        {
             device.setPin(CryptHandler.getInstance().createPin(6));
+            device.setStatus(Device.statuses.WAITING_AUTH);
+        }
     }
 }

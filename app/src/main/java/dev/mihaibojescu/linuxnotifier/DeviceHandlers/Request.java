@@ -11,7 +11,7 @@ public class Request
 {
     public static class reasons
     {
-        public static final String REQUEST_INFO = "request information";
+        public static final String DISCOVER = "linux notifier discovery";
         public static final String AUTHENTIFICATE= "authentificate";
         public static final String NOTIFICATION = "notification";
         public static final String DENY_AUTH = "deny authentification";

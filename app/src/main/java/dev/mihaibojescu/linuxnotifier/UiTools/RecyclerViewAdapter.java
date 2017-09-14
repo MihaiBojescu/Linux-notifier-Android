@@ -51,6 +51,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.deviceMac.setText(device.getMac());
         if(device.getStatus() == Device.statuses.CONNECTED)
             holder.connectionStatus.setVisibility(View.VISIBLE);
+        else
+            holder.connectionStatus.setVisibility(View.INVISIBLE);
     }
 
     @Override
