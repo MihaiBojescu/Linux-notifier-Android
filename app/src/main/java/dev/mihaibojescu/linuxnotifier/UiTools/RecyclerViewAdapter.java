@@ -19,11 +19,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     private List<Device> dataset;
 
-    public static class ViewHolder extends RecyclerView.ViewHolder{
+
+    public static class ViewHolder extends RecyclerView.ViewHolder
+    {
         public TextView deviceName;
         public TextView deviceMac;
         public TextView connectionStatus;
-        public ViewHolder(View view) {
+
+
+        public ViewHolder(View view)
+        {
             super(view);
             deviceName = (TextView) view.findViewById(R.id.devicename);
             deviceMac = (TextView) view.findViewById(R.id.devicemac);
@@ -49,10 +54,21 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Device device = dataset.get(position);
         holder.deviceName.setText(device.getName());
         holder.deviceMac.setText(device.getMac());
-        if(device.getStatus() == Device.statuses.CONNECTED)
-            holder.connectionStatus.setVisibility(View.VISIBLE);
-        else
-            holder.connectionStatus.setVisibility(View.INVISIBLE);
+        switch (device.getStatus())
+        {
+            case NEW:
+                holder.connectionStatus.setText("New");
+                break;
+            case WAITING_AUTH:
+                holder.connectionStatus.setText("Waiting authentification");
+                break;
+            case CONNECTED:
+                holder.connectionStatus.setText("Connected");
+                break;
+            case DISCONNECTED:
+                holder.connectionStatus.setText("Disconnected");
+                break;
+        }
     }
 
     @Override

@@ -19,7 +19,7 @@ public class Device
         WAITING_AUTH,
         CONNECTED,
         DISCONNECTED
-    };
+    }
 
 
     public Device()

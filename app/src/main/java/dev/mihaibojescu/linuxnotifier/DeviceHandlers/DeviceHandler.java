@@ -86,8 +86,10 @@ public class DeviceHandler extends Thread
                             break;
                     }
                 else
+                {
                     device.setStatus(Device.statuses.DISCONNECTED);
-
+                    this.updateUI();
+                }
             }
             catch (InterruptedException e)
             {
@@ -124,18 +126,10 @@ public class DeviceHandler extends Thread
             request.put("pin", device.getPin());
 
             UIHandler.post(new AuthUIRunnable(device, main, communicator, this));
-        }
-        catch (JSONException e)
-        {
-            e.printStackTrace();
-        }
 
-        communicator.pushMessageToIP(device.getAddress(), 5005, request, true);
-
-        try
-        {
             lastInterval = communicator.getInterval();
             communicator.setInterval(10000);
+            communicator.pushMessageToIP(device.getAddress(), 5005, request, true);
             JSONObject response = communicator.getResponse();
             communicator.setInterval(lastInterval);
 
@@ -145,8 +139,9 @@ public class DeviceHandler extends Thread
                 this.updateUI();
                 this.writeDevicesToFile();
             }
+
         }
-        catch(JSONException e)
+        catch (JSONException e)
         {
             e.printStackTrace();
         }
@@ -208,7 +203,7 @@ public class DeviceHandler extends Thread
             JSONArray macs = new JSONArray();
             JSONArray pins = new JSONArray();
 
-            for (Device currentDevice : this.devices)
+            for (Device currentDevice: this.devices)
             {
                 names.put(currentDevice.getName());
                 addresses.put(currentDevice.getAddress());
@@ -238,12 +233,15 @@ public class DeviceHandler extends Thread
     {
         NetworkCommunicator communicator = NetworkCommunicator.getInstance();
 
-        for(Device currentDevice: devices)
-            if(isDeviceValid(currentDevice))
-                if(currentDevice.getStatus() == Device.statuses.CONNECTED)
+        for (Device currentDevice: devices)
+            if (isDeviceValid(currentDevice))
+                if (currentDevice.getStatus() == Device.statuses.CONNECTED)
                     communicator.pushMessageToIP(currentDevice.getAddress(), 5005, message, false);
                 else
-                    currentDevice.setStatus(Device.statuses.NEW);
+                {
+                    currentDevice.setStatus(Device.statuses.DISCONNECTED);
+                    updateUI();
+                }
     }
 
     public void addDevice(Device device)

@@ -5,7 +5,11 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
 
     <TextView
         android:id="@+id/devicename"
@@ -29,7 +33,6 @@
         android:layout_alignBottom="@+id/devicename"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:text="Connected"
-        android:visibility="invisible"/>
+        android:visibility="visible"/>
 
 </RelativeLayout>

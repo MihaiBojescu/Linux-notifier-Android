@@ -3,6 +3,7 @@ package dev.mihaibojescu.linuxnotifier.NotificationHandlers;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,7 +24,7 @@ public class NotificationBroadcastReceiver extends BroadcastReceiver
         try
         {
             JSONObject message = Request.createRequest(Request.reasons.NOTIFICATION);
-            message.put("appName", intent.getStringExtra("appName"));
+            message.put("app name", intent.getStringExtra("app name"));
             message.put("title", intent.getStringExtra("title"));
             message.put("data", intent.getStringExtra("data"));
 

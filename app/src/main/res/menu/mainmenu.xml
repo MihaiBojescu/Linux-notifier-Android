@@ -2,8 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/refreshdevices"
         android:title="@string/refresh"/>
-    <item android:id="@+id/renewkeys"
-        android:title="@string/renew_keys"/>
     <item android:id="@+id/cleancache"
-        android:title="@string/clean_cache"/>
+          android:title="@string/clean_cache"/>
 </menu>

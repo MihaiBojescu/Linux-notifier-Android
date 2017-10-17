@@ -5,27 +5,25 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.SeekBar;
-import android.widget.Toast;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import dev.mihaibojescu.linuxnotifier.Crypto.CryptHandler;
 import dev.mihaibojescu.linuxnotifier.DeviceHandlers.DeviceHandler;
 import dev.mihaibojescu.linuxnotifier.IO.IOClass;
 import dev.mihaibojescu.linuxnotifier.NetworkTools.DiscoveryReceiver;
@@ -50,7 +48,7 @@ public class MainActivity extends AppCompatActivity
     private DiscoveryReceiver receiver;
     private DiscoverySender sender;
 
-    
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -70,11 +68,6 @@ public class MainActivity extends AppCompatActivity
         this.receiver = DiscoveryReceiver.getInstance();
 
         startThreads();
-
-        SeekBar seekbar = ((SeekBar)findViewById(R.id.seekBar));
-        pingService.updateInterval(seekbar.getProgress());
-        communicatorThread.setInterval(seekbar.getProgress());
-        seekbar.setOnSeekBarChangeListener(new SeekBarHandler());
 
         checkAndUpdatePermissions();
 
@@ -149,22 +142,6 @@ public class MainActivity extends AppCompatActivity
                 deviceHandler.scanSubnet();
                 return true;
 
-            case R.id.renewkeys:
-                CryptHandler auth = CryptHandler.getInstance();
-                auth.createNewKeys(2048);
-
-                try
-                {
-                    Toast.makeText(this.getApplicationContext(), auth.getPublicKey().getEncoded().toString(), Toast.LENGTH_LONG).show();
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-
-                Toast.makeText(this, "Not implemented yet", Toast.LENGTH_SHORT).show();
-                return true;
-
             case R.id.cleancache:
                 this.deviceHandler.clearCache();
                 this.communicatorThread.clearAll();
@@ -185,15 +162,20 @@ public class MainActivity extends AppCompatActivity
 
         if (this.deviceHandler.getState() == Thread.State.NEW)
         {
-            this.deviceHandler.getAndCheckDevicesFromFile();
+//            this.deviceHandler.getAndCheckDevicesFromFile();
             this.deviceHandler.start();
         }
 
-        if(this.sender.getState() == Thread.State.NEW)
+        Log.d("MAINACTIVITY", this.sender.getState().toString());
+        Log.d("MAINACTIVITY", this.receiver.getState().toString());
+        if (this.sender.getState() == Thread.State.NEW)
             this.sender.start();
 
-        if(this.receiver.getState() == Thread.State.NEW)
+        if (this.receiver.getState() == Thread.State.NEW)
             this.receiver.start();
+
+        Log.d("MAINACTIVITY", this.sender.getState().toString());
+        Log.d("MAINACTIVITY", this.receiver.getState().toString());
 
     }
 
@@ -210,7 +192,7 @@ public class MainActivity extends AppCompatActivity
         if (listenerString != null && !listenerString.equals(""))
         {
             String[] listeners = listenerString.split(":");
-            for (String listener: listeners)
+            for (String listener : listeners)
             {
                 ComponentName componentName = ComponentName.unflattenFromString(listener);
                 if (componentName != null)
@@ -250,28 +232,6 @@ public class MainActivity extends AppCompatActivity
         public void onClick(View view, int position)
         {
             deviceHandler.addPriorityDeviceToCheckList(deviceHandler.getHostByIndex(position));
-        }
-    }
-
-    private class SeekBarHandler implements SeekBar.OnSeekBarChangeListener
-    {
-        @Override
-        public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser)
-        {
-            pingService.updateInterval(progress);
-            communicatorThread.setInterval(progress);
-        }
-
-        @Override
-        public void onStartTrackingTouch(android.widget.SeekBar seekBar)
-        {
-
-        }
-
-        @Override
-        public void onStopTrackingTouch(android.widget.SeekBar seekBar)
-        {
-
         }
     }
 }

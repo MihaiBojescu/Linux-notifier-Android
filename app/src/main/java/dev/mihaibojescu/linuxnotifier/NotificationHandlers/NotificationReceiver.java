@@ -11,6 +11,8 @@ import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.RequiresApi;
+import android.widget.Toast;
+
 import dev.mihaibojescu.linuxnotifier.R;
 
 /**
@@ -27,7 +29,8 @@ public class NotificationReceiver extends NotificationListenerService
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent)
+    {
         return super.onBind(intent);
     }
 
@@ -50,11 +53,11 @@ public class NotificationReceiver extends NotificationListenerService
             ApplicationInfo applicationInfo;
             applicationInfo = packageManager.getApplicationInfo(sbn.getPackageName(), 0);
 
-            intent.putExtra("appName", packageManager.getApplicationLabel(applicationInfo));
+            intent.putExtra("app name", packageManager.getApplicationLabel(applicationInfo));
         }
         catch(PackageManager.NameNotFoundException e)
         {
-            intent.putExtra("appName", "unknown application");
+            intent.putExtra("app name", "unknown application");
         }
 
         intent.putExtra("title", sbn.getNotification().extras.getString("android.title"));

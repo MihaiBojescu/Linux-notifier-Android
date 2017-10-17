@@ -1,5 +1,7 @@
 package dev.mihaibojescu.linuxnotifier.NetworkTools;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -63,6 +65,7 @@ public class DiscoverySender extends Thread
                 {
                     send.wait();
                     socket.send(packet);
+                    Log.d("Discovery Service", "Sent discovery");
                 }
                 catch (InterruptedException | IOException e)
                 {

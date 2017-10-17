@@ -107,9 +107,4 @@ public class PingService extends Thread {
     {
         pingQueue.clear();
     }
-
-    public void updateInterval(Integer interval)
-    {
-        this.interval = interval;
-    }
 }
